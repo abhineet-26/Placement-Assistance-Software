@@ -97,3 +97,21 @@ def notify_student_offer(db: Session, student_user: User, job_title: str, offer_
         "Offer Update",
         f"Your offer for {job_title} has been updated to {status}."
     )
+
+def notify_company_offer_decision(db: Session, company_user: User, job_title: str, status: str, background_tasks):
+    notif = Notification(
+        recipient_user_id=company_user.id,
+        type=NotificationType.status_change,
+        payload={"job_title": job_title, "offer_status": status}
+    )
+    db.add(notif)
+    db.commit()
+    db.refresh(notif)
+
+    background_tasks.add_task(
+        dispatch_notification_task,
+        str(notif.id),
+        company_user.email,
+        "Offer Decision",
+        f"The offer for {job_title} has been {status} by the student."
+    )

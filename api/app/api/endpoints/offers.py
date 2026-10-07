@@ -7,9 +7,9 @@ from app.core.auth import get_current_user
 from app.models.users import User, RoleEnum
 from app.models.application import Application
 from app.models.offer import Offer, OfferStatusEnum
-from app.schemas.offer import OfferCreate, OfferUpdate, OfferOut
+from app.schemas.offer import OfferCreate, OfferUpdate, OfferDecision, OfferOut
 from app.services.status import update_application_status
-from app.services.notifications import notify_student_offer
+from app.services.notifications import notify_student_offer, notify_company_offer_decision
 from app.models.audit import AuditLog
 
 router = APIRouter()
@@ -48,7 +48,7 @@ def create_offer(
         action="offer.create",
         entity_type="offer",
         entity_id=offer.id,
-        metadata={"application_id": str(application.id)}
+        metadata_info={"application_id": str(application.id)}
     )
     db.add(audit)
     db.commit()
@@ -98,7 +98,7 @@ def update_offer(
         action="offer.update",
         entity_type="offer",
         entity_id=offer.id,
-        metadata=update_data
+        metadata_info=update_data
     )
     db.add(audit)
     db.commit()
@@ -116,6 +116,53 @@ def update_offer(
         background_tasks=background_tasks
     )
     
+    return offer
+
+@router.patch("/{id}/decision", response_model=OfferOut)
+def decide_offer(
+    *,
+    db: Session = Depends(get_db),
+    id: UUID4,
+    decision: OfferDecision,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user)
+) -> Any:
+    if current_user.role != RoleEnum.student:
+        raise HTTPException(status_code=403, detail="Only the offer recipient can decide on an offer")
+
+    if decision.status not in [OfferStatusEnum.accepted, OfferStatusEnum.declined]:
+        raise HTTPException(status_code=400, detail="Offer decision must be accepted or declined")
+
+    offer = db.query(Offer).join(Application).filter(
+        Offer.id == id,
+        Application.student_id == current_user.student.id
+    ).first()
+    if not offer:
+        raise HTTPException(status_code=404, detail="Offer not found")
+    if offer.status != OfferStatusEnum.extended:
+        raise HTTPException(status_code=400, detail="Only an extended offer can be decided")
+
+    offer.status = decision.status
+    db.commit()
+    db.refresh(offer)
+
+    db.add(AuditLog(
+        actor_user_id=current_user.id,
+        action=f"offer.{decision.status.value}",
+        entity_type="offer",
+        entity_id=offer.id,
+        metadata_info={"application_id": str(offer.application_id)}
+    ))
+    db.commit()
+
+    update_application_status(db, offer.application_id)
+    notify_company_offer_decision(
+        db=db,
+        company_user=offer.application.job.company.user,
+        job_title=offer.application.job.title,
+        status=decision.status.value,
+        background_tasks=background_tasks
+    )
     return offer
 
 @router.get("/", response_model=List[OfferOut])

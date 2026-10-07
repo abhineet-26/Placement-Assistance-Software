@@ -14,6 +14,9 @@ class OfferUpdate(BaseModel):
     offer_details: Optional[Dict[str, Any]] = None
     status: Optional[OfferStatusEnum] = None
 
+class OfferDecision(BaseModel):
+    status: OfferStatusEnum
+
 class OfferOut(OfferBase):
     id: UUID4
     status: OfferStatusEnum

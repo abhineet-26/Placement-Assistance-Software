@@ -155,6 +155,18 @@ def test_interviews_and_offers_lifecycle():
     assert apps_check.status_code == 200
     app_status = next(a["status"] for a in apps_check.json() if a["id"] == app_id)
     assert app_status == "offer_received"
+
+    decision_res = client.patch(
+        f"/api/v1/offers/{offer_id}/decision",
+        json={"status": "declined"},
+        headers={"Authorization": f"Bearer {t_stud}"}
+    )
+    assert decision_res.status_code == 200
+
+    apps_check = client.get("/api/v1/applications/me", headers={"Authorization": f"Bearer {t_stud}"})
+    assert apps_check.status_code == 200
+    app_status = next(a["status"] for a in apps_check.json() if a["id"] == app_id)
+    assert app_status == "shortlisted"
     
     # 9. Admin updates offer status to accepted
     offer_update_res = client.patch(

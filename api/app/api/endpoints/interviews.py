@@ -45,7 +45,7 @@ def create_interview(
         action="interview.create",
         entity_type="interview",
         entity_id=interview.id,
-        metadata={"application_id": str(application.id)}
+        metadata_info={"application_id": str(application.id)}
     )
     db.add(audit)
     db.commit()
@@ -95,7 +95,7 @@ def update_interview(
         action="interview.update",
         entity_type="interview",
         entity_id=interview.id,
-        metadata=update_data
+        metadata_info=update_data
     )
     db.add(audit)
     db.commit()

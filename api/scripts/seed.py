@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 # Add the project root to the python path
 sys.path.append(str(Path(__file__).parent.parent))
 
+from app.db import base
 from app.db.session import SessionLocal
 from app.models.users import User, Admin, RoleEnum
 from app.core.security import get_password_hash
