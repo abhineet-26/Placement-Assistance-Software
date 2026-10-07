@@ -14,6 +14,21 @@ type ApplicationWithJob = {
   } | null;
 };
 
+type Interview = {
+  id: string;
+  application_id: string;
+  scheduled_at: string;
+  location_or_mode: string;
+  status: string;
+};
+
+type Offer = {
+  id: string;
+  application_id: string;
+  offer_details: Record<string, unknown>;
+  status: string;
+};
+
 const ApplicationsPage = () => {
   const queryClient = useQueryClient();
 
@@ -23,6 +38,16 @@ const ApplicationsPage = () => {
       const res = await api.get('/applications/me');
       return res.data;
     }
+  });
+
+  const { data: interviews, isLoading: interviewsLoading } = useQuery<Interview[]>({
+    queryKey: ['my-interviews'],
+    queryFn: async () => (await api.get('/interviews/')).data,
+  });
+
+  const { data: offers, isLoading: offersLoading } = useQuery<Offer[]>({
+    queryKey: ['my-offers'],
+    queryFn: async () => (await api.get('/offers/')).data,
   });
 
   const withdrawMutation = useMutation({
@@ -35,7 +60,18 @@ const ApplicationsPage = () => {
     }
   });
 
-  if (isLoading) return <div>Loading applications...</div>;
+  const offerDecisionMutation = useMutation({
+    mutationFn: async ({ offerId, status }: { offerId: string; status: 'accepted' | 'declined' }) => {
+      const res = await api.patch(`/offers/${offerId}/decision`, { status });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-offers'] });
+      queryClient.invalidateQueries({ queryKey: ['my-applications'] });
+    },
+  });
+
+  if (isLoading || interviewsLoading || offersLoading) return <div>Loading applications...</div>;
 
   return (
     <div className="space-y-6">
@@ -101,6 +137,56 @@ const ApplicationsPage = () => {
           </table>
         </div>
       )}
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        {applications?.map((app) => {
+          const interview = interviews?.find((item) => item.application_id === app.id);
+          const offer = offers?.find((item) => item.application_id === app.id);
+          if (!interview && !offer) return null;
+
+          return (
+            <article key={`${app.id}-details`} className="rounded-lg border border-border bg-surface p-5">
+              <p className="text-sm font-semibold uppercase tracking-wider text-accent">{app.job_summary?.title || 'Application'}</p>
+              {interview && (
+                <div className="mt-3 border-l-2 border-warning pl-3">
+                  <h2 className="font-semibold text-primary">Interview {interview.status}</h2>
+                  <p className="text-sm text-text-secondary">
+                    {new Date(interview.scheduled_at).toLocaleString()} · {interview.location_or_mode}
+                  </p>
+                </div>
+              )}
+              {offer && (
+                <div className="mt-4 border-l-2 border-success pl-3">
+                  <h2 className="font-semibold text-primary">Offer {offer.status}</h2>
+                  <p className="mt-1 text-sm text-text-secondary">
+                    {Object.entries(offer.offer_details).map(([key, value]) => `${key}: ${String(value)}`).join(' · ')}
+                  </p>
+                  {offer.status === 'extended' && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => offerDecisionMutation.mutate({ offerId: offer.id, status: 'accepted' })}
+                        disabled={offerDecisionMutation.isPending}
+                        className="rounded bg-success px-3 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+                      >
+                        Accept offer
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => offerDecisionMutation.mutate({ offerId: offer.id, status: 'declined' })}
+                        disabled={offerDecisionMutation.isPending}
+                        className="rounded border border-danger px-3 py-2 text-sm font-semibold text-danger hover:bg-red-50 disabled:opacity-50"
+                      >
+                        Decline offer
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </article>
+          );
+        })}
+      </div>
     </div>
   );
 };

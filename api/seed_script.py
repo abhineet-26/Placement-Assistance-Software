@@ -1,14 +1,14 @@
 
+from app.db import base
 from app.db.session import SessionLocal
 from app.models.users import User, RoleEnum, Student, Company, Admin, ApprovalStatusEnum
-from app.models.jobs import Job
 from app.core.security import get_password_hash
 from sqlalchemy import text
 
 db = SessionLocal()
 
 # Delete all tables (truncate)
-db.execute(text("TRUNCATE TABLE applications, jobs, companies, students, admins, users CASCADE"))
+db.execute(text("TRUNCATE TABLE applications, job_requirements, companies, students, admins, users CASCADE"))
 db.commit()
 
 # Create Admin

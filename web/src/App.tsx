@@ -18,6 +18,10 @@ import PendingCompaniesPage from './pages/admin/PendingCompaniesPage';
 import PendingJobsPage from './pages/admin/PendingJobsPage';
 import AdminJobsPage from './pages/admin/AdminJobsPage';
 import JobMatchesPage from './pages/admin/JobMatchesPage';
+import NotificationsPage from './pages/NotificationsPage';
+import NotFoundPage from './pages/NotFoundPage';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import FeedbackModerationPage from './pages/admin/FeedbackModerationPage';
 
 const queryClient = new QueryClient();
 
@@ -58,6 +62,7 @@ function App() {
                     <Route path="applications" element={<ApplicationsPage />} />
                     <Route path="profile" element={<ProfilePage />} />
                     <Route path="cv" element={<CVEditorPage />} />
+                    <Route path="notifications" element={<NotificationsPage />} />
                   </Routes>
                 </ProtectedRoute>
               } />
@@ -69,6 +74,7 @@ function App() {
                     <Route path="jobs/new" element={<PostJobPage />} />
                     <Route path="cvs" element={<CompanyJobCVsPage />} />
                     <Route path="jobs/:jobId/cvs" element={<CompanyJobCVsPage />} />
+                    <Route path="notifications" element={<NotificationsPage />} />
                   </Routes>
                 </ProtectedRoute>
               } />
@@ -76,14 +82,17 @@ function App() {
               <Route path="admin/*" element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <Routes>
-                    <Route index element={<Navigate to="companies" replace />} />
+                    <Route index element={<AdminDashboardPage />} />
                     <Route path="companies" element={<PendingCompaniesPage />} />
                     <Route path="jobs/pending" element={<PendingJobsPage />} />
                     <Route path="jobs" element={<AdminJobsPage />} />
                     <Route path="jobs/:jobId/matches" element={<JobMatchesPage />} />
+                    <Route path="feedback" element={<FeedbackModerationPage />} />
+                    <Route path="notifications" element={<NotificationsPage />} />
                   </Routes>
                 </ProtectedRoute>
               } />
+              <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Routes>
         </BrowserRouter>

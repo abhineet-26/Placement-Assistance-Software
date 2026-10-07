@@ -112,7 +112,7 @@ def test_applications_lifecycle():
         headers={"Authorization": f"Bearer {student_token}"},
         json={"job_id": job_id_standard}
     )
-    assert apply_res.status_code == 200
+    assert apply_res.status_code == 201
     app_id = apply_res.json()["id"]
     assert apply_res.json()["status"] == "applied"
     

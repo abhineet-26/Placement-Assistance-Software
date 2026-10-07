@@ -14,13 +14,16 @@ const Layout = () => {
   return (
     <div className="flex h-screen bg-background text-text-primary font-sans">
       {/* Sidebar */}
-      <aside className="w-64 bg-surface border-r border-border flex flex-col hidden md:flex">
+      <aside className="hidden w-64 flex-col border-r border-border bg-surface md:flex">
         <div className="p-4 text-h3 font-semibold text-primary border-b border-border">
           Placement Assistant
         </div>
         <nav className="flex-1 p-4 space-y-2">
           {user?.role === 'admin' && (
             <>
+              <Link to="/admin" className="block px-4 py-2 text-sm text-text-secondary hover:bg-gray-50 rounded">
+                Dashboard
+              </Link>
               <Link to="/admin/companies" className="block px-4 py-2 text-sm text-text-secondary hover:bg-gray-50 rounded">
                 Pending Companies
               </Link>
@@ -29,6 +32,12 @@ const Layout = () => {
               </Link>
               <Link to="/admin/jobs" className="block px-4 py-2 text-sm text-text-secondary hover:bg-gray-50 rounded">
                 Active Jobs
+              </Link>
+              <Link to="/admin/notifications" className="block px-4 py-2 text-sm text-text-secondary hover:bg-gray-50 rounded">
+                Notifications
+              </Link>
+              <Link to="/admin/feedback" className="block px-4 py-2 text-sm text-text-secondary hover:bg-gray-50 rounded">
+                Feedback
               </Link>
             </>
           )}
@@ -46,6 +55,9 @@ const Layout = () => {
               <Link to="/student/cv" className="block px-4 py-2 text-sm text-text-secondary hover:bg-gray-50 rounded">
                 My CV
               </Link>
+              <Link to="/student/notifications" className="block px-4 py-2 text-sm text-text-secondary hover:bg-gray-50 rounded">
+                Notifications
+              </Link>
             </>
           )}
           {user?.role === 'company' && (
@@ -55,6 +67,9 @@ const Layout = () => {
               </Link>
               <Link to="/company/jobs/new" className="block px-4 py-2 text-sm text-text-secondary hover:bg-gray-50 rounded">
                 Post Job
+              </Link>
+              <Link to="/company/notifications" className="block px-4 py-2 text-sm text-text-secondary hover:bg-gray-50 rounded">
+                Notifications
               </Link>
             </>
           )}

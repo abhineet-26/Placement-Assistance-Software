@@ -1,5 +1,6 @@
 import logging
 import asyncio
+import os
 from datetime import datetime, timezone
 from email.message import EmailMessage
 import aiosmtplib
@@ -9,9 +10,8 @@ from app.models.notification import Notification, NotificationLog, NotificationS
 
 logger = logging.getLogger(__name__)
 
-# Config for mailhog
-SMTP_HOST = "mailhog"
-SMTP_PORT = 1025
+SMTP_HOST = os.getenv("SMTP_HOST", "mailhog")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "1025"))
 MAX_RETRIES = 3
 BACKOFF_BASE = 2 # seconds
 

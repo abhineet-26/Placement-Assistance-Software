@@ -1,3 +1,14 @@
 # graft's local graph cache — regenerable, not committed (run `graft build`).
 /graft/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Frontend/build output
+node_modules/
+web/dist/
+web/playwright-report/
+web/test-results/
 /.github/agents/

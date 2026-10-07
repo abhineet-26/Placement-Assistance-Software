@@ -129,6 +129,8 @@ def decide_offer(
 ) -> Any:
     if current_user.role != RoleEnum.student:
         raise HTTPException(status_code=403, detail="Only the offer recipient can decide on an offer")
+    if not current_user.student:
+        raise HTTPException(status_code=400, detail="Student profile not found")
 
     if decision.status not in [OfferStatusEnum.accepted, OfferStatusEnum.declined]:
         raise HTTPException(status_code=400, detail="Offer decision must be accepted or declined")

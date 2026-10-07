@@ -118,7 +118,7 @@ def test_interviews_and_offers_lifecycle():
         },
         headers={"Authorization": f"Bearer {admin_token}"}
     )
-    assert interview_res.status_code == 200
+    assert interview_res.status_code == 201
     interview_id = interview_res.json()["id"]
     
     # Check application status updated to "interview_scheduled" via student /me endpoint
@@ -147,7 +147,7 @@ def test_interviews_and_offers_lifecycle():
         },
         headers={"Authorization": f"Bearer {admin_token}"}
     )
-    assert offer_res.status_code == 200
+    assert offer_res.status_code == 201
     offer_id = offer_res.json()["id"]
     
     # Check application status updated to "offer_received"
@@ -166,7 +166,7 @@ def test_interviews_and_offers_lifecycle():
     apps_check = client.get("/api/v1/applications/me", headers={"Authorization": f"Bearer {t_stud}"})
     assert apps_check.status_code == 200
     app_status = next(a["status"] for a in apps_check.json() if a["id"] == app_id)
-    assert app_status == "shortlisted"
+    assert app_status == "interview_scheduled"
     
     # 9. Admin updates offer status to accepted
     offer_update_res = client.patch(
