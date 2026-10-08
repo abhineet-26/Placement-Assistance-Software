@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../lib/api';
+import StatusBadge from '../../components/StatusBadge';
 
 type ApplicationWithJob = {
   id: string;
@@ -71,52 +72,62 @@ const ApplicationsPage = () => {
     },
   });
 
-  if (isLoading || interviewsLoading || offersLoading) return <div>Loading applications...</div>;
+  if (isLoading || interviewsLoading || offersLoading) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-h1 font-bold text-primary">My Applications</h1>
+        <div className="bg-surface rounded-xl shadow-card p-4 space-y-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-16 bg-background rounded animate-pulse" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-h1 font-bold text-primary">My Applications</h1>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-h1 font-bold text-primary mb-1">My Applications</h1>
+        <p className="text-text-secondary">Track the status of jobs you've applied for.</p>
+      </div>
       
       {!applications || applications.length === 0 ? (
-        <div className="p-6 bg-surface border border-border rounded-lg text-text-secondary text-center">
-          You haven't applied to any jobs yet.
+        <div className="bg-surface border border-border rounded-xl p-12 text-center shadow-card flex flex-col items-center justify-center">
+          <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mb-4">
+            <svg className="w-10 h-10 text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+          </div>
+          <h2 className="text-xl font-bold text-text-primary mb-2">No applications yet</h2>
+          <p className="text-text-secondary max-w-md">You haven't applied to any jobs yet. Check out the opportunities page to find your next role.</p>
         </div>
       ) : (
-        <div className="bg-surface border border-border rounded-lg overflow-hidden">
+        <div className="bg-surface rounded-xl shadow-card overflow-hidden">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50 border-b border-border">
-                <th className="p-4 font-semibold text-sm text-text-secondary">Job Title</th>
-                <th className="p-4 font-semibold text-sm text-text-secondary">Company</th>
-                <th className="p-4 font-semibold text-sm text-text-secondary">Applied On</th>
-                <th className="p-4 font-semibold text-sm text-text-secondary">Status</th>
-                <th className="p-4 font-semibold text-sm text-text-secondary text-right">Actions</th>
+              <tr className="bg-gray-50/80 border-b border-border/60">
+                <th className="p-5 font-semibold text-sm text-text-secondary uppercase tracking-wider">Job Title</th>
+                <th className="p-5 font-semibold text-sm text-text-secondary uppercase tracking-wider">Company</th>
+                <th className="p-5 font-semibold text-sm text-text-secondary uppercase tracking-wider">Applied On</th>
+                <th className="p-5 font-semibold text-sm text-text-secondary uppercase tracking-wider">Status</th>
+                <th className="p-5 font-semibold text-sm text-text-secondary uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
-            <tbody>
-              {applications.map((app) => (
-                <tr key={app.id} className="border-b border-border last:border-b-0 hover:bg-gray-50 transition-colors">
-                  <td className="p-4 font-medium text-primary">
+            <tbody className="divide-y divide-border/50">
+              {applications.map((app, idx) => (
+                <tr key={app.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'} hover:bg-gray-50 transition-colors`}>
+                  <td className="p-5 font-medium text-text-primary">
                     {app.job_summary?.title || 'Unknown Job'}
                   </td>
-                  <td className="p-4 text-text-secondary">
+                  <td className="p-5 text-text-secondary">
                     {app.job_summary?.company_name || 'Unknown Company'}
                   </td>
-                  <td className="p-4 text-text-secondary">
+                  <td className="p-5 text-text-secondary">
                     {new Date(app.created_at).toLocaleDateString()}
                   </td>
-                  <td className="p-4">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full capitalize
-                      ${app.status === 'applied' ? 'bg-blue-100 text-blue-800' : ''}
-                      ${app.status === 'withdrawn' ? 'bg-gray-100 text-gray-800' : ''}
-                      ${app.status === 'interview_scheduled' ? 'bg-yellow-100 text-yellow-800' : ''}
-                      ${app.status === 'offer_received' ? 'bg-purple-100 text-purple-800' : ''}
-                      ${app.status === 'placed' ? 'bg-green-100 text-green-800' : ''}
-                    `}>
-                      {app.status.replace('_', ' ')}
-                    </span>
+                  <td className="p-5">
+                    <StatusBadge status={app.status.replace('_', ' ')} />
                   </td>
-                  <td className="p-4 text-right">
+                  <td className="p-5 text-right">
                     {(app.status === 'applied' || app.status === 'interview_scheduled') && (
                       <button
                         onClick={() => {
@@ -125,7 +136,7 @@ const ApplicationsPage = () => {
                           }
                         }}
                         disabled={withdrawMutation.isPending && withdrawMutation.variables === app.id}
-                        className="text-sm text-red-600 hover:text-red-800 font-medium disabled:opacity-50"
+                        className="text-sm px-3 py-1.5 rounded text-danger hover:bg-danger/10 font-medium disabled:opacity-50 transition-colors"
                       >
                         Withdraw
                       </button>

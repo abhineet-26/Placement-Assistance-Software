@@ -101,7 +101,7 @@ const JobMatchesPage = () => {
     }
   };
 
-  if (isLoading) return <div>Loading matches...</div>;
+  if (isLoading) return (<div className="animate-pulse space-y-4"><div className="h-6 bg-border rounded w-1/3" /><div className="h-4 bg-border rounded w-2/3" /><div className="h-4 bg-border rounded w-1/2" /></div>);
 
   return (
     <div className="space-y-6">
@@ -135,7 +135,7 @@ const JobMatchesPage = () => {
           No matches found or matching hasn't run yet. Click 'Run Matching Engine'.
         </div>
       ) : (
-        <div className="overflow-x-auto bg-surface rounded-lg border border-border shadow-sm">
+        <div className="overflow-x-auto bg-surface rounded-lg border border-border shadow-sm hover:shadow-md transition-shadow">
           <table className="min-w-full text-left text-sm">
             <thead className="bg-background/50 text-text-secondary">
               <tr>

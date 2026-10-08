@@ -8,38 +8,38 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#1E3A5F',
-          hover: '#16283F',
+          DEFAULT: 'var(--color-primary)',
+          hover: 'var(--color-primary-hover)',
         },
         accent: {
-          DEFAULT: '#2F8F7A',
+          DEFAULT: 'var(--color-accent)',
         },
         warning: {
-          DEFAULT: '#C77D28',
+          DEFAULT: 'var(--color-warning)',
         },
         danger: {
-          DEFAULT: '#B3413A',
+          DEFAULT: 'var(--color-danger)',
         },
         success: {
-          DEFAULT: '#2E7D4F',
+          DEFAULT: 'var(--color-success)',
         },
         background: {
-          DEFAULT: '#F6F7F9',
+          DEFAULT: 'var(--color-background)',
         },
         surface: {
-          DEFAULT: '#FFFFFF',
+          DEFAULT: 'var(--color-surface)',
         },
         border: {
-          DEFAULT: '#E2E5EA',
+          DEFAULT: 'var(--color-border)',
         },
         text: {
-          primary: '#1A1F29',
-          secondary: '#5B6472',
+          primary: 'var(--color-text-primary)',
+          secondary: 'var(--color-text-secondary)',
         },
         role: {
-          student: '#2F8F7A',
+          student: 'var(--color-accent)',
           company: '#7A5FB3',
-          admin: '#1E3A5F',
+          admin: 'var(--color-primary)',
         }
       },
       fontFamily: {
@@ -47,16 +47,25 @@ export default {
         mono: ['"JetBrains Mono"', 'monospace'],
       },
       fontSize: {
-        caption: '0.75rem',  // 12px
-        sm: '0.875rem',      // 14px
-        base: '1rem',        // 16px
-        lg: '1.125rem',      // 18px
-        h3: '1.375rem',      // 22px
-        h2: '1.75rem',       // 28px
-        h1: '2.25rem',       // 36px
+        caption: '0.75rem',
+        sm: '0.875rem',
+        base: '1rem',
+        lg: '1.125rem',
+        h3: '1.375rem',
+        h2: '1.75rem',
+        h1: '2.25rem',
       },
       spacing: {
-        base: '0.25rem',     // 4px base unit
+        base: '0.25rem',
+      },
+      boxShadow: {
+        card: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+      },
+      borderRadius: {
+        sm: 'var(--radius-sm)',
+        md: 'var(--radius-md)',
+        lg: 'var(--radius-lg)',
+        xl: 'var(--radius-xl)',
       }
     },
   },

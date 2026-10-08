@@ -19,7 +19,7 @@ const AdminJobsPage = () => {
     }
   });
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return (<div className="animate-pulse space-y-4"><div className="h-6 bg-border rounded w-1/3" /><div className="h-4 bg-border rounded w-2/3" /><div className="h-4 bg-border rounded w-1/2" /></div>);
 
   return (
     <div className="space-y-6">
@@ -32,7 +32,7 @@ const AdminJobsPage = () => {
       ) : (
         <div className="grid gap-4">
           {jobs?.map(job => (
-            <div key={job.id} className="p-6 bg-surface border border-border rounded-lg shadow-sm flex justify-between items-center">
+            <div key={job.id} className="p-6 bg-surface border border-border rounded-lg shadow-sm flex justify-between items-center hover:shadow-md transition-shadow">
               <div>
                 <h3 className="font-semibold text-lg">{job.title}</h3>
                 <p className="text-sm text-text-secondary mt-1">Vacancies: {job.vacancies}</p>

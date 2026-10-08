@@ -36,31 +36,31 @@ test.describe('Diagnostic Pass', () => {
 
   test('Admin Login & Journey', async ({ page }) => {
     await page.goto('/login');
-    await page.fill('input[type="email"]', 'admin@test.com');
+    await page.fill('input[type="email"]', 'admin@demo.com');
     await page.fill('input[type="password"]', 'password');
     await page.click('button:has-text("Sign In")');
 
-    await page.waitForURL('/admin/companies');
-    expect(page.url()).toContain('/admin/companies');
+    await page.waitForURL('/admin');
+    expect(page.url()).toContain('/admin');
 
     // Additional admin checks can go here
   });
 
   test('Student Login & Journey', async ({ page }) => {
     await page.goto('/login');
-    await page.fill('input[type="email"]', 'student@test.com');
+    await page.fill('input[type="email"]', 'student@demo.com');
     await page.fill('input[type="password"]', 'password');
     await page.click('button:has-text("Sign In")');
 
-    await page.waitForURL('/student/opportunities');
-    expect(page.url()).toContain('/student/opportunities');
+    await page.waitForURL('/student/dashboard');
+    expect(page.url()).toContain('/student/dashboard');
     
     // Additional student checks
   });
 
   test('Company Login & Journey', async ({ page }) => {
     await page.goto('/login');
-    await page.fill('input[type="email"]', 'company@test.com');
+    await page.fill('input[type="email"]', 'techcorp@demo.com');
     await page.fill('input[type="password"]', 'password');
     await page.click('button:has-text("Sign In")');
 

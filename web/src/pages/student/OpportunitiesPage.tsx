@@ -1,10 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../lib/api';
 import { useState } from 'react';
+import JobCard from '../../components/JobCard';
 
 type Job = {
   id: string;
   company_id: string;
+  company_name?: string;
   title: string;
   description: string;
   required_skills: string[];
@@ -14,6 +16,8 @@ type Job = {
   allowed_branches: string[] | null;
   max_backlogs: number | null;
   status: string;
+  ctc?: string;
+  location?: string;
 };
 
 type StudentProfile = {
@@ -83,7 +87,18 @@ const OpportunitiesPage = () => {
 
   const isLoading = jobsLoading || profileLoading || cvLoading || appsLoading;
 
-  if (isLoading) return <div>Loading opportunities...</div>;
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-h1 font-bold text-primary">Job Opportunities</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="h-64 bg-surface rounded-xl shadow-card animate-pulse border border-border" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   const getEligibility = (job: Job) => {
     if (!profile) return { isEligible: false, reason: 'Profile not loaded' };
@@ -106,112 +121,67 @@ const OpportunitiesPage = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-h1 font-bold text-primary">Job Opportunities</h1>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-h1 font-bold text-primary mb-2">Job Opportunities</h1>
+        <p className="text-text-secondary">Discover and apply for your next career move.</p>
+      </div>
       
       {!cv && (
-        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded text-yellow-800">
-          <strong>Notice:</strong> You must upload a CV in your profile before you can apply to any jobs.
+        <div className="p-4 bg-warning/10 border border-warning/20 rounded-xl text-warning-800 flex items-start gap-3 shadow-sm">
+          <svg className="w-5 h-5 mt-0.5 text-warning flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          <div>
+            <strong className="block mb-1">Upload your CV</strong>
+            You must upload a CV in your profile before you can apply to any jobs.
+          </div>
         </div>
       )}
 
       {jobs?.length === 0 ? (
-        <div className="p-6 bg-surface border border-border rounded-lg text-text-secondary text-center">
-          No job opportunities available right now. Check back later!
+        <div className="bg-surface border border-border rounded-xl p-12 shadow-card flex flex-col items-center justify-center text-center">
+          <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mb-4">
+            <svg className="w-10 h-10 text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+          </div>
+          <h2 className="text-xl font-bold text-text-primary mb-2">No job opportunities</h2>
+          <p className="text-text-secondary max-w-md">There are no job opportunities available at this time. Please check back later when companies post new openings.</p>
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {jobs?.map(job => {
             const eligibility = getEligibility(job);
             const isPastDeadline = new Date(job.application_deadline) < new Date();
             const hasApplied = applications?.some((app: any) => app.job_id === job.id && app.status !== 'withdrawn');
             
-            // Client side blocking logic
             const isButtonDisabled = !cv || isPastDeadline || hasApplied || !eligibility.isEligible || applyMutation.isPending;
             
+            const actionText = hasApplied ? 'Applied' : isPastDeadline ? 'Closed' : !eligibility.isEligible ? 'Not Eligible' : applyMutation.isPending && applyMutation.variables === job.id ? 'Applying...' : 'Apply Now';
+
             return (
-              <div key={job.id} className="p-6 bg-surface border border-border rounded-lg shadow-sm flex flex-col h-full hover:shadow-md transition-shadow">
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-bold text-xl text-primary">{job.title}</h3>
-                    {eligibility.isEligible ? (
-                      <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">Eligible</span>
-                    ) : (
-                      <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-full">Not Eligible</span>
-                    )}
-                  </div>
-                  
-                  {!eligibility.isEligible && (
-                    <div className="mt-2 text-xs text-red-600 font-medium">
-                      Reason: {eligibility.reason}
-                    </div>
-                  )}
-
-                  <div className="mt-4 text-sm text-text-secondary whitespace-pre-wrap">
-                    {job.description}
-                  </div>
-                  
-                  <div className="mt-4">
-                    <h4 className="text-sm font-semibold mb-1">Required Skills</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {job.required_skills.map(skill => (
-                        <span key={skill} className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded border border-blue-100">
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <span className="text-text-secondary font-medium">Vacancies:</span> {job.vacancies}
-                    </div>
-                    <div>
-                      <span className="text-text-secondary font-medium">Min CGPA:</span> {job.min_cgpa || 'N/A'}
-                    </div>
-                    <div>
-                      <span className="text-text-secondary font-medium">Max Backlogs:</span> {job.max_backlogs ?? 'N/A'}
-                    </div>
-                    <div className="col-span-2">
-                      <span className="text-text-secondary font-medium">Deadline:</span> {new Date(job.application_deadline).toLocaleDateString()}
-                    </div>
-                  </div>
-                </div>
+              <div key={job.id} className="relative group">
+                <JobCard 
+                  job={{
+                    title: job.title,
+                    company_name: job.company_name || 'Company Name',
+                    ctc: job.ctc || 'Not specified',
+                    location: job.location || 'Location TBD',
+                    deadline: job.application_deadline,
+                    skills: job.required_skills
+                  }}
+                  onApply={isButtonDisabled ? undefined : () => applyMutation.mutate(job.id)}
+                  actionText={actionText}
+                />
                 
-                <div className="mt-6 pt-4 border-t border-border space-y-2">
-                  {applyError?.jobId === job.id && (
-                    <div className="text-sm text-red-600 font-medium">
-                      {applyError.message}
-                    </div>
-                  )}
-                  {hasApplied ? (
-                    <button 
-                      disabled
-                      className="w-full px-4 py-2 bg-gray-200 text-gray-500 font-medium rounded cursor-not-allowed"
-                    >
-                      Applied
-                    </button>
-                  ) : isPastDeadline ? (
-                    <button 
-                      disabled
-                      className="w-full px-4 py-2 bg-gray-200 text-gray-500 font-medium rounded cursor-not-allowed"
-                    >
-                      Deadline Passed
-                    </button>
-                  ) : (
-                    <button 
-                      disabled={isButtonDisabled}
-                      onClick={() => applyMutation.mutate(job.id)}
-                      className={`w-full px-4 py-2 font-medium rounded transition-colors ${
-                        isButtonDisabled 
-                          ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
-                          : 'bg-primary text-white hover:bg-opacity-90'
-                      }`}
-                    >
-                      {applyMutation.isPending && applyMutation.variables === job.id ? 'Applying...' : 'Apply Now'}
-                    </button>
-                  )}
-                </div>
+                {/* Overlay text for errors/eligibility if button is disabled for those reasons */}
+                {!eligibility.isEligible && !hasApplied && !isPastDeadline && (
+                  <div className="absolute top-4 right-4 bg-red-100 text-red-800 text-xs font-semibold px-2 py-1 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                    {eligibility.reason}
+                  </div>
+                )}
+                {applyError?.jobId === job.id && (
+                  <div className="absolute bottom-20 left-6 right-6 bg-red-100 text-red-800 text-xs font-semibold px-2 py-1 rounded shadow-sm z-10 text-center truncate">
+                    {applyError.message}
+                  </div>
+                )}
               </div>
             );
           })}

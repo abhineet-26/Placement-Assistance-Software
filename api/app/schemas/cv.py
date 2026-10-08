@@ -9,6 +9,7 @@ class CVBase(BaseModel):
     skills: Optional[List[str]] = None
     projects: Optional[Dict[str, Any]] = None
     certifications: Optional[Dict[str, Any]] = None
+    pdf_file_path: Optional[str] = None
 
 class CVCreate(CVBase):
     pass

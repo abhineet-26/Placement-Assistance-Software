@@ -10,6 +10,9 @@ class RoleEnum(str, enum.Enum):
     student = "student"
     company = "company"
     admin = "admin"
+    super_admin = "super_admin"
+    faculty_coordinator = "faculty_coordinator"
+    student_representative = "student_representative"
 
 class EnrollmentStatusEnum(str, enum.Enum):
     pending = "pending"

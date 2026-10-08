@@ -14,6 +14,7 @@ class CV(Base):
     skills = Column(ARRAY(String), nullable=True)
     projects = Column(JSONB, nullable=True)
     certifications = Column(JSONB, nullable=True)
+    pdf_file_path = Column(String, nullable=True)
     version = Column(Integer, default=1, nullable=False)
     is_valid = Column(Boolean, default=True, nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

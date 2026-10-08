@@ -42,7 +42,7 @@ const CompanyJobCVsPage = () => {
 
   const [selectedMatch, setSelectedMatch] = useState<MatchWithCV | null>(null);
 
-  if (isLoading) return <div>Loading received CVs...</div>;
+  if (isLoading) return (<div className="animate-pulse space-y-4"><div className="h-6 bg-border rounded w-1/3" /><div className="h-4 bg-border rounded w-2/3" /><div className="h-4 bg-border rounded w-1/2" /></div>);
 
   return (
     <div className="space-y-6">

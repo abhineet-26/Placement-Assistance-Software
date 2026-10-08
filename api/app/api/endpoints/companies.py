@@ -12,6 +12,8 @@ from app.schemas.auth import TokenPayload
 
 router = APIRouter()
 
+from app.schemas.job import JobRequirementOut
+from app.models.job import JobRequirement
 @router.get("/", response_model=List[CompanyOut])
 def get_companies(
     status: Optional[ApprovalStatusEnum] = None,
@@ -82,6 +84,21 @@ def get_my_company(
     if not user.company:
         raise HTTPException(status_code=404, detail="Company profile not found")
     return user.company
+
+@router.get("/me/jobs", response_model=List[JobRequirementOut])
+def get_my_jobs(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+    token: TokenPayload = Depends(require_role(["company"]))
+):
+    if not user.company:
+        raise HTTPException(status_code=404, detail="Company profile not found")
+    
+    jobs = db.query(JobRequirement).filter(
+        JobRequirement.company_id == user.company.id
+    ).order_by(JobRequirement.created_at.desc()).all()
+    
+    return jobs
 
 from app.models.match import Match, MatchForwardingStatus
 from app.models.job import JobRequirement
