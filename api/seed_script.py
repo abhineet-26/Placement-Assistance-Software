@@ -19,6 +19,13 @@ db.commit()
 admin_prof = Admin(user_id=admin.id, full_name="Admin Test")
 db.add(admin_prof)
 
+# Create Test Admin for automated tests
+test_admin = User(email="admin@placement.local", password_hash=get_password_hash("admin123"), role=RoleEnum.admin, is_active=True)
+db.add(test_admin)
+db.commit()
+test_admin_prof = Admin(user_id=test_admin.id, full_name="Test Admin")
+db.add(test_admin_prof)
+
 # Create Student
 student = User(email="student@demo.com", password_hash=get_password_hash("password"), role=RoleEnum.student, is_active=True)
 db.add(student)

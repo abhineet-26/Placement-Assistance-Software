@@ -3,6 +3,32 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import api from '../../lib/api';
+import {
+  Box,
+  Typography,
+  Button,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Checkbox,
+  Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  FormControlLabel,
+  Stack,
+  Alert
+} from '@mui/material';
 
 type StudentMatchSummary = {
   id: string;
@@ -105,135 +131,161 @@ const JobMatchesPage = () => {
   if (isLoading) return <PageSkeleton />;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-h1 font-bold text-primary">Job Matches</h1>
-          {job && <p className="text-text-secondary mt-1">{job.title}</p>}
-        </div>
-        <div className="flex items-center gap-3">
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2 }}>
+        <Box>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }} color="primary">
+            Job Matches
+          </Typography>
+          {job && (
+            <Typography variant="subtitle1" color="text.secondary">
+              {job.title}
+            </Typography>
+          )}
+        </Box>
+        <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
           {selectedMatchIds.size > 0 && (
-            <button
+            <Button
+              variant="contained"
+              color="success"
               onClick={() => approveMutation.mutate()}
               disabled={approveMutation.isPending}
-              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50 font-medium"
             >
               {approveMutation.isPending ? 'Approving...' : `Approve ${selectedMatchIds.size} CVs`}
-            </button>
+            </Button>
           )}
-          <button 
+          <Button 
+            variant="contained"
+            color="secondary"
             onClick={() => triggerMatchingMutation.mutate()}
             disabled={triggerMatchingMutation.isPending}
-            className="px-4 py-2 bg-secondary text-white rounded hover:bg-primary transition-colors disabled:opacity-50"
           >
             {triggerMatchingMutation.isPending ? 'Running...' : 'Run Matching Engine'}
-          </button>
-        </div>
-      </div>
+          </Button>
+        </Stack>
+      </Box>
       
       {matches?.length === 0 ? (
-        <div className="p-6 bg-surface border border-border rounded-lg text-text-secondary text-center">
+        <Alert severity="info" sx={{ width: '100%' }}>
           No matches found or matching hasn't run yet. Click 'Run Matching Engine'.
-        </div>
+        </Alert>
       ) : (
-        <div className="overflow-x-auto bg-surface rounded-lg border border-border shadow-sm hover:shadow-md transition-shadow">
-          <table className="min-w-full text-left text-sm">
-            <thead className="bg-background/50 text-text-secondary">
-              <tr>
-                <th className="px-4 py-3 font-medium border-b border-border w-12 text-center">
-                  <input 
-                    type="checkbox" 
-                    className="rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+        <TableContainer component={Paper} variant="outlined" sx={{ boxShadow: 'none' }}>
+          <Table sx={{ minWidth: 650 }} aria-label="job matches table">
+            <TableHead sx={{ bgcolor: 'background.default' }}>
+              <TableRow>
+                <TableCell padding="checkbox">
+                  <Checkbox
+                    color="primary"
+                    indeterminate={selectedMatchIds.size > 0 && matches && selectedMatchIds.size < matches.length}
                     checked={matches && matches.length > 0 && selectedMatchIds.size === matches.length}
                     onChange={selectAll}
                   />
-                </th>
-                <th className="px-4 py-3 font-medium border-b border-border">Rank</th>
-                <th className="px-4 py-3 font-medium border-b border-border">Student</th>
-                <th className="px-4 py-3 font-medium border-b border-border">Profile</th>
-                <th className="px-4 py-3 font-medium border-b border-border">Skills Map</th>
-                <th className="px-4 py-3 font-medium text-right border-b border-border">Match Score</th>
-                <th className="px-4 py-3 font-medium text-center border-b border-border">Status</th>
-                <th className="px-4 py-3 font-medium text-center border-b border-border w-20">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
+                </TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Rank</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Student</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Profile</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Skills Map</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 'bold' }}>Match Score</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 'bold' }}>Status</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 'bold' }}>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
               {matches?.map((match, index) => {
                 const isEligible = match.hard_filter_passed;
                 
                 return (
-                  <tr key={match.id} className={!isEligible ? "opacity-60 bg-gray-50" : ""}>
-                    <td className="px-4 py-3 text-center">
-                      <input 
-                        type="checkbox" 
-                        className="rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                  <TableRow 
+                    key={match.id}
+                    sx={{ 
+                      '&:last-child td, &:last-child th': { border: 0 },
+                      opacity: isEligible ? 1 : 0.6,
+                      bgcolor: isEligible ? 'inherit' : 'action.hover'
+                    }}
+                  >
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        color="primary"
                         checked={selectedMatchIds.has(match.id)}
                         onChange={() => toggleMatchSelection(match.id)}
                         disabled={match.forwarding_status === 'sent'}
                       />
-                    </td>
-                    <td className="px-4 py-3 font-medium">
+                    </TableCell>
+                    <TableCell component="th" scope="row">
                       #{index + 1}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="font-medium text-text">{match.student.full_name}</div>
-                      <div className="text-text-secondary text-xs">{match.student.roll_number}</div>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-text-secondary space-y-1">
-                      <div>CGPA: {match.student.cgpa.toFixed(2)}</div>
-                      <div>Branch: {match.student.branch}</div>
-                      <div>Backlogs: {match.student.backlogs}</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-1 max-w-[250px]">
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                        {match.student.full_name}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {match.student.roll_number}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Stack direction="column" spacing={0.5}>
+                        <Typography variant="caption" color="text.secondary">
+                          CGPA: {match.student.cgpa.toFixed(2)}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Branch: {match.student.branch}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Backlogs: {match.student.backlogs}
+                        </Typography>
+                      </Stack>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, maxWidth: 250 }}>
                         {job?.required_skills.map((skill, idx) => {
                           const hasSkill = (match.student_skills || []).some(s => s.toLowerCase().trim() === skill.toLowerCase().trim());
                           return (
-                            <span 
+                            <Chip 
                               key={idx} 
-                              className={`text-[10px] px-2 py-0.5 rounded-full ${hasSkill ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-red-50 text-red-700 border border-red-100 opacity-80'}`}
+                              label={skill} 
+                              size="small"
+                              color={hasSkill ? "success" : "default"}
+                              variant={hasSkill ? "filled" : "outlined"}
+                              sx={{ 
+                                fontSize: '0.65rem', 
+                                height: '20px',
+                                opacity: hasSkill ? 1 : 0.7
+                              }}
                               title={hasSkill ? 'Matched' : 'Missing'}
-                            >
-                              {skill}
-                            </span>
+                            />
                           );
                         })}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="font-medium text-lg">
+                      </Box>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
                         {Math.round(match.skill_score * 100)}%
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-center">
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="center">
                       {!isEligible ? (
-                        <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full font-medium">
-                          Ineligible
-                        </span>
+                        <Chip label="Ineligible" size="small" />
                       ) : match.forwarding_status === 'pending' ? (
-                        <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-medium">
-                          Pending Review
-                        </span>
+                        <Chip label="Pending Review" size="small" color="warning" />
                       ) : (
-                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium capitalize">
-                          {match.forwarding_status}
-                        </span>
+                        <Chip label={match.forwarding_status} size="small" color="success" sx={{ textTransform: 'capitalize' }} />
                       )}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <button 
+                    </TableCell>
+                    <TableCell align="center">
+                      <Button 
+                        size="small" 
                         onClick={() => setOverrideMatch(match)}
-                        className="text-primary hover:text-secondary text-xs font-medium"
                       >
                         Override
-                      </button>
-                    </td>
-                  </tr>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
 
       {overrideMatch && (
@@ -244,7 +296,7 @@ const JobMatchesPage = () => {
           isPending={overrideMutation.isPending}
         />
       )}
-    </div>
+    </Box>
   );
 };
 
@@ -272,74 +324,68 @@ const OverrideDialog = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-surface rounded-lg shadow-xl w-full max-w-md p-6 border border-border">
-        <h3 className="text-xl font-bold text-text mb-4">Override Match</h3>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-text mb-1">Student</label>
-            <div className="p-2 bg-background rounded text-sm text-text-secondary border border-border">
-              {match.student.full_name} ({match.student.roll_number})
-            </div>
-          </div>
+    <Dialog open={true} onClose={onClose} fullWidth maxWidth="xs">
+      <DialogTitle>Override Match</DialogTitle>
+      <DialogContent dividers>
+        <Stack spacing={3}>
+          <Box>
+            <Typography variant="subtitle2" gutterBottom>Student</Typography>
+            <Paper variant="outlined" sx={{ p: 1, bgcolor: 'background.default' }}>
+              <Typography variant="body2" color="text.secondary">
+                {match.student.full_name} ({match.student.roll_number})
+              </Typography>
+            </Paper>
+          </Box>
           
-          <div>
-            <label className="block text-sm font-medium text-text mb-1">Forwarding Status</label>
-            <select 
+          <FormControl fullWidth size="small">
+            <InputLabel id="status-label">Forwarding Status</InputLabel>
+            <Select
+              labelId="status-label"
               value={status}
+              label="Forwarding Status"
               onChange={(e) => setStatus(e.target.value)}
-              className="w-full p-2 border border-border rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none"
             >
-              <option value="pending">Pending</option>
-              <option value="sent">Sent</option>
-            </select>
-          </div>
+              <MenuItem value="pending">Pending</MenuItem>
+              <MenuItem value="sent">Sent</MenuItem>
+            </Select>
+          </FormControl>
           
-          <div className="flex items-center gap-2">
-            <input 
-              type="checkbox" 
-              id="hard_filter"
-              checked={hardFilterPassed}
-              onChange={(e) => setHardFilterPassed(e.target.checked)}
-              className="rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
-            />
-            <label htmlFor="hard_filter" className="text-sm font-medium text-text cursor-pointer">
-              Passed Hard Filters (Eligibility)
-            </label>
-          </div>
+          <FormControlLabel
+            control={
+              <Checkbox 
+                checked={hardFilterPassed}
+                onChange={(e) => setHardFilterPassed(e.target.checked)}
+                color="primary"
+              />
+            }
+            label={<Typography variant="body2">Passed Hard Filters (Eligibility)</Typography>}
+          />
           
-          <div>
-            <label className="block text-sm font-medium text-text mb-1">Skill Score (0.0 - 1.0)</label>
-            <input 
-              type="number"
-              step="0.01"
-              min="0"
-              max="1"
-              value={skillScoreStr}
-              onChange={(e) => setSkillScoreStr(e.target.value)}
-              className="w-full p-2 border border-border rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-            />
-          </div>
-        </div>
-        
-        <div className="mt-6 flex justify-end gap-3">
-          <button 
-            onClick={onClose}
-            className="px-4 py-2 border border-border rounded text-text hover:bg-background transition-colors"
-          >
-            Cancel
-          </button>
-          <button 
-            onClick={handleSave}
-            disabled={isPending}
-            className="px-4 py-2 bg-primary text-white rounded hover:bg-secondary transition-colors disabled:opacity-50"
-          >
-            {isPending ? 'Saving...' : 'Save Changes'}
-          </button>
-        </div>
-      </div>
-    </div>
+          <TextField
+            label="Skill Score (0.0 - 1.0)"
+            type="number"
+            slotProps={{ htmlInput: { step: 0.01, min: 0, max: 1 } }}
+            value={skillScoreStr}
+            onChange={(e) => setSkillScoreStr(e.target.value)}
+            fullWidth
+            size="small"
+          />
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose} color="inherit">
+          Cancel
+        </Button>
+        <Button 
+          onClick={handleSave} 
+          variant="contained" 
+          color="primary"
+          disabled={isPending}
+        >
+          {isPending ? 'Saving...' : 'Save Changes'}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 

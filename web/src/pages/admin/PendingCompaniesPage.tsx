@@ -16,7 +16,6 @@ import {
   Button,
   Tabs,
   Tab,
-  Stack,
   IconButton,
   Menu,
   MenuItem,
@@ -147,7 +146,7 @@ export default function PendingCompaniesPage() {
                     </TableCell>
                     <TableCell align="right">
                       {company.approval_status === 'pending_approval' ? (
-                        <Stack direction="row" spacing={1} justifyContent="flex-end">
+                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                           <Button
                             size="small"
                             variant="outlined"
@@ -166,7 +165,7 @@ export default function PendingCompaniesPage() {
                           >
                             Approve
                           </Button>
-                        </Stack>
+                        </Box>
                       ) : (
                         <IconButton size="small" onClick={(e) => handleMenuOpen(e, company)}>
                           <MoreVertIcon />

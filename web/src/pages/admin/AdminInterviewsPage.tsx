@@ -1,79 +1,138 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '../../lib/api';
+import PageSkeleton from '../../components/PageSkeleton';
 import StatusBadge from '../../components/StatusBadge';
+import {
+  Box,
+  Typography,
+  Card,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Chip,
+} from '@mui/material';
+import { Event as EventIcon } from '@mui/icons-material';
+
+type Interview = {
+  id: string;
+  student_name?: string;
+  job_title?: string;
+  company_name?: string;
+  scheduled_date: string;
+  scheduled_time?: string;
+  mode: string;
+  status: string;
+};
 
 export default function AdminInterviewsPage() {
-  const { data: interviews, isLoading } = useQuery({
+  const { data: interviews, isLoading } = useQuery<Interview[]>({
     queryKey: ['admin', 'interviews'],
     queryFn: async () => (await api.get('/admin/interviews')).data,
   });
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-h1 font-bold text-primary">Interviews</h1>
-        </div>
-        <div className="bg-surface rounded-xl shadow-card p-4 space-y-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-14 bg-background rounded animate-pulse" />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  if (isLoading) return <PageSkeleton />;
+
+  const scheduledCount = interviews?.filter(i => i.status === 'scheduled').length ?? 0;
+  const completedCount = interviews?.filter(i => i.status === 'completed').length ?? 0;
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-h1 font-bold text-primary mb-1">Interviews</h1>
-        <p className="text-text-secondary">Track upcoming and past interviews.</p>
-      </div>
+    <Box sx={{ pb: 4 }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="overline" sx={{ fontWeight: 700, color: 'secondary.main', letterSpacing: 1.2 }}>
+          Operations
+        </Typography>
+        <Typography variant="h4" sx={{ fontWeight: 800, color: 'primary.main', mb: 1 }}>
+          Interviews
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          Track all scheduled and completed interviews across the platform.
+        </Typography>
+      </Box>
 
-      <div className="bg-surface rounded-xl shadow-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50/80 border-b border-border/60">
-                <th className="p-5 font-semibold text-sm text-text-secondary uppercase tracking-wider">Student</th>
-                <th className="p-5 font-semibold text-sm text-text-secondary uppercase tracking-wider">Job & Company</th>
-                <th className="p-5 font-semibold text-sm text-text-secondary uppercase tracking-wider">Date & Time</th>
-                <th className="p-5 font-semibold text-sm text-text-secondary uppercase tracking-wider">Mode</th>
-                <th className="p-5 font-semibold text-sm text-text-secondary uppercase tracking-wider">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/50">
-              {interviews?.map((interview: any, idx: number) => (
-                <tr key={interview.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'} hover:bg-gray-50 transition-colors`}>
-                  <td className="p-5 font-medium text-text-primary">{interview.student_name}</td>
-                  <td className="p-5">
-                    <div className="font-medium text-text-primary">{interview.job_title}</div>
-                    <div className="text-sm text-text-secondary">{interview.company_name}</div>
-                  </td>
-                  <td className="p-5">
-                    <div className="text-text-primary">{new Date(interview.scheduled_date).toLocaleDateString()}</div>
-                    <div className="text-sm text-text-secondary">{interview.scheduled_time}</div>
-                  </td>
-                  <td className="p-5 capitalize text-text-secondary">{interview.mode}</td>
-                  <td className="p-5">
+      <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1.5, mb: 3 }}>
+        <Chip icon={<EventIcon />} label={`${interviews?.length ?? 0} Total`} variant="outlined" />
+        <Chip label={`${scheduledCount} Scheduled`} color="info" variant="outlined" />
+        <Chip label={`${completedCount} Completed`} color="success" variant="outlined" />
+      </Box>
+
+      <Card variant="outlined" sx={{ overflow: 'hidden' }}>
+        <TableContainer sx={{ maxHeight: 'calc(100vh - 340px)' }}>
+          <Table stickyHeader size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 700, bgcolor: 'grey.50' }}>Student</TableCell>
+                <TableCell sx={{ fontWeight: 700, bgcolor: 'grey.50' }}>Job & Company</TableCell>
+                <TableCell sx={{ fontWeight: 700, bgcolor: 'grey.50' }}>Date & Time</TableCell>
+                <TableCell sx={{ fontWeight: 700, bgcolor: 'grey.50' }}>Mode</TableCell>
+                <TableCell sx={{ fontWeight: 700, bgcolor: 'grey.50' }}>Status</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {interviews?.map((interview) => (
+                <TableRow key={interview.id} hover>
+                  <TableCell>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {interview.student_name || '—'}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>{interview.job_title || '—'}</Typography>
+                    <Typography variant="caption" color="text.secondary">{interview.company_name || ''}</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {interview.scheduled_date
+                        ? new Date(interview.scheduled_date).toLocaleDateString('en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          })
+                        : '—'}
+                    </Typography>
+                    {interview.scheduled_time && (
+                      <Typography variant="caption" color="text.secondary">
+                        {interview.scheduled_time}
+                      </Typography>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={interview.mode || 'online'}
+                      size="small"
+                      variant="outlined"
+                      color={interview.mode === 'online' ? 'info' : 'default'}
+                      sx={{ textTransform: 'capitalize' }}
+                    />
+                  </TableCell>
+                  <TableCell>
                     <StatusBadge status={interview.status} />
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
               {(!interviews || interviews.length === 0) && (
-                <tr>
-                  <td colSpan={5} className="p-12 text-center text-text-secondary">
-                    <div className="flex flex-col items-center justify-center">
-                      <div className="text-4xl mb-3 opacity-50">🗓️</div>
-                      <p className="font-medium text-text-primary">No interviews scheduled.</p>
-                    </div>
-                  </td>
-                </tr>
+                <TableRow>
+                  <TableCell colSpan={5} sx={{ textAlign: 'center', py: 8 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                      <EventIcon sx={{ fontSize: 48, color: 'text.disabled' }} />
+                      <Typography color="text.secondary" sx={{ fontWeight: 600 }}>No interviews yet</Typography>
+                      <Typography variant="body2" color="text.disabled">
+                        Interviews will appear here once scheduled by companies.
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                </TableRow>
               )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Card>
+
+      <Typography variant="caption" color="text.disabled" sx={{ mt: 1.5, display: 'block' }}>
+        {interviews?.length ?? 0} interview records total
+      </Typography>
+    </Box>
   );
 }

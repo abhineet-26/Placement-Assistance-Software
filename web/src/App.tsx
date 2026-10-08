@@ -13,6 +13,7 @@ import ProfilePage from './pages/student/ProfilePage';
 import CVEditorPage from './pages/student/CVEditorPage';
 import OpportunitiesPage from './pages/student/OpportunitiesPage';
 import ApplicationsPage from './pages/student/ApplicationsPage';
+import StudentInterviewsPage from './pages/student/InterviewsPage';
 import StudentFeedbackPage from './pages/student/FeedbackPage';
 
 import CompanyDashboardPage from './pages/company/DashboardPage';
@@ -69,6 +70,7 @@ function App() {
                     <Route path="dashboard" element={<StudentDashboardPage />} />
                     <Route path="opportunities" element={<OpportunitiesPage />} />
                     <Route path="applications" element={<ApplicationsPage />} />
+                    <Route path="interviews" element={<StudentInterviewsPage />} />
                     <Route path="profile" element={<ProfilePage />} />
                     <Route path="cv" element={<CVEditorPage />} />
                     <Route path="feedback" element={<StudentFeedbackPage />} />
