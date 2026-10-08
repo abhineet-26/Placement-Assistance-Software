@@ -22,12 +22,15 @@ def create_offer(
     background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user)
 ) -> Any:
-    if current_user.role != RoleEnum.admin:
+    if current_user.role not in [RoleEnum.admin, RoleEnum.company]:
         raise HTTPException(status_code=403, detail="Not enough permissions")
     
     application = db.query(Application).filter(Application.id == offer_in.application_id).first()
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")
+        
+    if current_user.role == RoleEnum.company and application.job.company_id != current_user.company.id:
+        raise HTTPException(status_code=403, detail="Not authorized to make offers for this application")
         
     existing_offer = db.query(Offer).filter(Offer.application_id == offer_in.application_id).first()
     if existing_offer:
@@ -36,7 +39,7 @@ def create_offer(
     offer = Offer(
         application_id=offer_in.application_id,
         offer_details=offer_in.offer_details,
-        created_by=current_user.admin.id
+        created_by=current_user.id
     )
     db.add(offer)
     db.commit()
@@ -77,12 +80,15 @@ def update_offer(
     background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user)
 ) -> Any:
-    if current_user.role != RoleEnum.admin:
+    if current_user.role not in [RoleEnum.admin, RoleEnum.company]:
         raise HTTPException(status_code=403, detail="Not enough permissions")
         
     offer = db.query(Offer).filter(Offer.id == id).first()
     if not offer:
         raise HTTPException(status_code=404, detail="Offer not found")
+        
+    if current_user.role == RoleEnum.company and offer.application.job.company_id != current_user.company.id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this offer")
         
     update_data = offer_in.dict(exclude_unset=True)
     for field, value in update_data.items():

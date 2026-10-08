@@ -19,10 +19,10 @@ class Offer(Base):
     application_id = Column(UUID(as_uuid=True), ForeignKey("applications.id"), unique=True, nullable=False)
     offer_details = Column(JSONB, nullable=False)
     status = Column(Enum(OfferStatusEnum), default=OfferStatusEnum.extended, nullable=False)
-    created_by = Column(UUID(as_uuid=True), ForeignKey("admins.id"), nullable=False)
+    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
 
     application = relationship("Application", backref="offer", uselist=False)
-    admin = relationship("Admin")
+    creator = relationship("User")

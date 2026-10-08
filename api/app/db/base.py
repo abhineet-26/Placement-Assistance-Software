@@ -9,3 +9,4 @@ from app.models.notification import Notification, NotificationLog
 from app.models.interview import Interview
 from app.models.offer import Offer
 from app.models.feedback import Feedback
+from app.models.policy import PolicySettings

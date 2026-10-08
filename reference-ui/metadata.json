@@ -1,0 +1,6 @@
+{
+  "name": "Placement Assistance Portal",
+  "description": "Comprehensive placement lifecycle management platform for students, recruiters, and university placement administrators.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

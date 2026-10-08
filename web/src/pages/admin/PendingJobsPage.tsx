@@ -6,14 +6,32 @@ import {
   Box,
   Typography,
   Card,
-  CardContent,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   Button,
   Chip,
+  IconButton,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   TextField,
-  Divider,
+  Tooltip
 } from '@mui/material';
 import {
   WorkOff as WorkOffIcon,
+  MoreVert as MoreVertIcon,
+  Check as CheckIcon,
+  Reply as ReplyIcon,
+  Info as InfoIcon
 } from '@mui/icons-material';
 
 type Job = {
@@ -28,9 +46,8 @@ type Job = {
   min_cgpa: number | null;
 };
 
-const PendingJobsPage = () => {
+export default function PendingJobsPage() {
   const queryClient = useQueryClient();
-  const [returnComment, setReturnComment] = useState<Record<string, string>>({});
 
   const { data: jobs, isLoading } = useQuery<Job[]>({
     queryKey: ['admin-jobs', 'pending'],
@@ -43,7 +60,7 @@ const PendingJobsPage = () => {
   const approveMutation = useMutation({
     mutationFn: (id: string) => api.patch(`/jobs/${id}/approve`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-jobs', 'pending'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-jobs'] });
     }
   });
 
@@ -51,10 +68,47 @@ const PendingJobsPage = () => {
     mutationFn: ({ id, comment }: { id: string, comment: string }) => 
       api.patch(`/jobs/${id}/return`, { review_comment: comment }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-jobs', 'pending'] });
-      setReturnComment({});
+      queryClient.invalidateQueries({ queryKey: ['admin-jobs'] });
+      handleCloseReturnDialog();
     }
   });
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  
+  const [returnDialogOpen, setReturnDialogOpen] = useState(false);
+  const [returnComment, setReturnComment] = useState('');
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, job: Job) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedJob(job);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSelectedJob(null);
+  };
+
+  const handleApprove = () => {
+    if (selectedJob) approveMutation.mutate(selectedJob.id);
+    handleMenuClose();
+  };
+
+  const handleOpenReturnDialog = () => {
+    setReturnDialogOpen(true);
+    handleMenuClose();
+  };
+
+  const handleCloseReturnDialog = () => {
+    setReturnDialogOpen(false);
+    setReturnComment('');
+  };
+
+  const handleConfirmReturn = () => {
+    if (selectedJob) {
+      returnMutation.mutate({ id: selectedJob.id, comment: returnComment || 'Please review.' });
+    }
+  };
 
   if (isLoading) return <PageSkeleton />;
 
@@ -80,76 +134,107 @@ const PendingJobsPage = () => {
           </Typography>
         </Card>
       ) : (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {jobs?.map(job => (
-            <Card key={job.id} variant="outlined" sx={{ '&:hover': { boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }, transition: 'box-shadow 0.2s' }}>
-              <CardContent sx={{ p: 4 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2, gap: 2 }}>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="h5" sx={{ fontWeight: 800, color: 'primary.main', mb: 1 }}>
-                      {job.title}
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                      <Chip label={`Vacancies: ${job.vacancies}`} size="small" variant="outlined" />
-                      {job.min_cgpa && (
-                        <Chip label={`Min CGPA: ${job.min_cgpa}`} size="small" color="info" variant="outlined" />
-                      )}
-                    </Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                      {job.description}
-                    </Typography>
-                  </Box>
-                </Box>
-                
-                <Box sx={{ mb: 3, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {job.required_skills.map((skill, i) => (
-                    <Chip key={i} label={skill} size="small" sx={{ bgcolor: 'primary.50', color: 'primary.main', fontWeight: 600 }} />
-                  ))}
-                </Box>
-
-                <Divider sx={{ my: 3 }} />
-
-                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'stretch', sm: 'flex-end' }, justifyContent: 'space-between', gap: 3 }}>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
-                      Return Comment (if rejecting)
-                    </Typography>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      placeholder="Enter reason for returning..."
-                      value={returnComment[job.id] || ''}
-                      onChange={e => setReturnComment(prev => ({ ...prev, [job.id]: e.target.value }))}
-                    />
-                  </Box>
-                  
-                  <Box sx={{ display: 'flex', gap: 2 }}>
-                    <Button 
-                      variant="outlined" 
-                      color="warning"
-                      onClick={() => returnMutation.mutate({ id: job.id, comment: returnComment[job.id] || 'Please review.' })}
-                      disabled={returnMutation.isPending}
-                    >
-                      Return to Company
-                    </Button>
-                    <Button 
-                      variant="contained" 
-                      color="success"
-                      disableElevation
-                      onClick={() => approveMutation.mutate(job.id)}
-                      disabled={approveMutation.isPending}
-                    >
-                      Publish Job
-                    </Button>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          ))}
-        </Box>
+        <Card variant="outlined" sx={{ overflow: 'hidden' }}>
+          <TableContainer sx={{ maxHeight: 'calc(100vh - 250px)' }}>
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600 }}>Job Title</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Vacancies</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Min CGPA</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Required Skills</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 600 }}>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {jobs?.map((job) => (
+                  <TableRow key={job.id} hover>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography sx={{ fontWeight: 600, color: 'primary.main' }}>
+                          {job.title}
+                        </Typography>
+                        <Tooltip title={job.description} placement="top">
+                          <InfoIcon fontSize="small" color="action" />
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Chip label={job.vacancies} size="small" variant="outlined" />
+                    </TableCell>
+                    <TableCell>
+                      {job.min_cgpa ? <Chip label={`≥ ${job.min_cgpa}`} size="small" color="info" /> : '-'}
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                        {job.required_skills.slice(0, 3).map((skill, i) => (
+                          <Chip key={i} label={skill} size="small" sx={{ bgcolor: 'primary.50', color: 'primary.main' }} />
+                        ))}
+                        {job.required_skills.length > 3 && (
+                          <Chip label={`+${job.required_skills.length - 3}`} size="small" variant="outlined" />
+                        )}
+                      </Box>
+                    </TableCell>
+                    <TableCell align="right">
+                      <IconButton size="small" onClick={(e) => handleMenuOpen(e, job)}>
+                        <MoreVertIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Card>
       )}
+
+      {/* Action Menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+      >
+        <MenuItem onClick={handleApprove}>
+          <ListItemIcon><CheckIcon color="success" fontSize="small" /></ListItemIcon>
+          <ListItemText>Publish Job</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleOpenReturnDialog}>
+          <ListItemIcon><ReplyIcon color="warning" fontSize="small" /></ListItemIcon>
+          <ListItemText>Return to Company</ListItemText>
+        </MenuItem>
+      </Menu>
+
+      {/* Return Dialog */}
+      <Dialog open={returnDialogOpen} onClose={handleCloseReturnDialog} fullWidth maxWidth="sm">
+        <DialogTitle>Return Job Posting</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Provide a reason for returning the job posting "{selectedJob?.title}" to the company for edits.
+          </Typography>
+          <TextField
+            autoFocus
+            fullWidth
+            multiline
+            rows={3}
+            placeholder="E.g., Please provide more details on the role requirements..."
+            value={returnComment}
+            onChange={(e) => setReturnComment(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 2, pt: 0 }}>
+          <Button onClick={handleCloseReturnDialog} color="inherit">Cancel</Button>
+          <Button 
+            onClick={handleConfirmReturn} 
+            color="warning" 
+            variant="contained" 
+            disabled={!returnComment.trim() || returnMutation.isPending}
+          >
+            Confirm Return
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
-};
-
-export default PendingJobsPage;
+}

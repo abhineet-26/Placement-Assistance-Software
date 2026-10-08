@@ -149,3 +149,49 @@ def get_offers(
     token: TokenPayload = Depends(require_role(["admin"]))
 ):
     return db.query(Offer).offset(skip).limit(limit).all()
+
+from app.models.policy import PolicySettings
+from app.schemas.policy import PolicySettingsCreate, PolicySettingsUpdate, PolicySettingsOut
+from fastapi import HTTPException
+
+@router.get("/policies", response_model=List[PolicySettingsOut])
+def list_policies(
+    db: Session = Depends(get_db),
+    token: TokenPayload = Depends(require_role(["admin"]))
+):
+    return db.query(PolicySettings).all()
+
+@router.post("/policies", response_model=PolicySettingsOut, status_code=201)
+def create_policy(
+    policy_in: PolicySettingsCreate,
+    db: Session = Depends(get_db),
+    token: TokenPayload = Depends(require_role(["admin"]))
+):
+    existing = db.query(PolicySettings).filter(PolicySettings.key == policy_in.key).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Policy key already exists")
+    policy = PolicySettings(**policy_in.model_dump())
+    db.add(policy)
+    db.commit()
+    db.refresh(policy)
+    return policy
+
+@router.patch("/policies/{key}", response_model=PolicySettingsOut)
+def update_policy(
+    key: str,
+    policy_in: PolicySettingsUpdate,
+    db: Session = Depends(get_db),
+    token: TokenPayload = Depends(require_role(["admin"]))
+):
+    policy = db.query(PolicySettings).filter(PolicySettings.key == key).first()
+    if not policy:
+        raise HTTPException(status_code=404, detail="Policy not found")
+    
+    update_data = policy_in.model_dump(exclude_unset=True)
+    for k, v in update_data.items():
+        setattr(policy, k, v)
+        
+    db.add(policy)
+    db.commit()
+    db.refresh(policy)
+    return policy
