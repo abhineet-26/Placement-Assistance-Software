@@ -1,7 +1,20 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import api from '../../lib/api';
 import JobCard from '../../components/JobCard';
+import PageSkeleton from '../../components/PageSkeleton';
+import {
+  Box,
+  Typography,
+  Button,
+  Grid,
+  Card,
+  CardContent,
+} from '@mui/material';
+import {
+  Add as AddIcon,
+  BusinessCenter as JobIcon,
+} from '@mui/icons-material';
 
 export default function CompanyJobsPage() {
   const navigate = useNavigate();
@@ -10,63 +23,73 @@ export default function CompanyJobsPage() {
     queryFn: async () => (await api.get('/companies/me/jobs')).data,
   });
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <h1 className="text-h1 font-bold text-primary">My Jobs</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-64 bg-surface rounded-xl shadow-card animate-pulse border border-border" />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  if (isLoading) return <PageSkeleton />;
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center flex-wrap gap-4">
-        <div>
-          <h1 className="text-h1 font-bold text-primary mb-1">My Jobs</h1>
-          <p className="text-text-secondary">Manage your job postings and applicants.</p>
-        </div>
-        <Link to="/company/jobs/new" className="bg-primary text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-primary-hover shadow-sm hover:shadow transition-all hover:-translate-y-0.5">
+    <Box>
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main', mb: 1 }}>
+            My Jobs
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Manage your job postings and applicants.
+          </Typography>
+        </Box>
+        <Button
+          component={RouterLink}
+          to="/company/jobs/new"
+          variant="contained"
+          startIcon={<AddIcon />}
+          sx={{ fontWeight: 600 }}
+        >
           Post New Job
-        </Link>
-      </div>
+        </Button>
+      </Box>
 
       {!jobs || jobs.length === 0 ? (
-        <div className="bg-surface border border-border rounded-xl p-12 text-center shadow-card flex flex-col items-center justify-center">
-          <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mb-4">
-            <svg className="w-10 h-10 text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-          </div>
-          <h2 className="text-xl font-bold text-text-primary mb-2">No jobs posted yet</h2>
-          <p className="text-text-secondary max-w-md mb-6">Click Post Job to create your first listing and start receiving applications.</p>
-          <Link to="/company/jobs/new" className="text-primary font-semibold hover:underline">
-            Post your first job &rarr;
-          </Link>
-        </div>
+        <Card variant="outlined" sx={{ textAlign: 'center', py: 8 }}>
+          <CardContent>
+            <Box sx={{ mx: 'auto', width: 80, height: 80, bgcolor: 'primary.50', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 3 }}>
+              <JobIcon sx={{ fontSize: 40, color: 'primary.main', opacity: 0.5 }} />
+            </Box>
+            <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>No jobs posted yet</Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 400, mx: 'auto' }}>
+              Click Post Job to create your first listing and start receiving applications.
+            </Typography>
+            <Button
+              component={RouterLink}
+              to="/company/jobs/new"
+              variant="contained"
+              size="large"
+              sx={{ fontWeight: 600 }}
+            >
+              Post your first job
+            </Button>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Grid container spacing={3}>
           {jobs.map((job: any) => (
-            <JobCard 
-              key={job.id} 
-              job={{
-                title: job.title,
-                company_name: 'Your Company', // It's their own job
-                ctc: job.package ? `₹${job.package} LPA` : 'Not specified',
-                location: job.location || 'Location TBD',
-                deadline: job.deadline,
-                skills: job.required_skills || [],
-                status: job.status
-              }}
-              onView={() => navigate(`/company/jobs/${job.id}/cvs`)}
-              actionText="View Applicants"
-              onApply={() => navigate(`/company/jobs/${job.id}/cvs`)}
-            />
+            <Grid size={{ xs: 12, md: 6, lg: 4 }} key={job.id}>
+              <JobCard 
+                job={{
+                  title: job.title,
+                  company_name: 'Your Company',
+                  ctc: job.package ? `₹${job.package} LPA` : 'Not specified',
+                  location: job.location || 'Location TBD',
+                  deadline: job.deadline,
+                  skills: job.required_skills || [],
+                  status: job.status
+                }}
+                onView={() => navigate(`/company/jobs/${job.id}/cvs`)}
+                actionText="View Applicants"
+                onApply={() => navigate(`/company/jobs/${job.id}/cvs`)}
+              />
+            </Grid>
           ))}
-        </div>
+        </Grid>
       )}
-    </div>
+    </Box>
   );
 }

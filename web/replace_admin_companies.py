@@ -1,4 +1,5 @@
-import { useState } from 'react';
+with open("src/pages/admin/PendingCompaniesPage.tsx", "w") as f:
+    f.write("""import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../lib/api';
 import PageSkeleton from '../../components/PageSkeleton';
@@ -200,3 +201,4 @@ export default function PendingCompaniesPage() {
     </Box>
   );
 }
+""")

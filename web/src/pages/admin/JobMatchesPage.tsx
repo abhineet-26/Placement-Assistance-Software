@@ -1,3 +1,4 @@
+import PageSkeleton from '../../components/PageSkeleton';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
@@ -101,7 +102,7 @@ const JobMatchesPage = () => {
     }
   };
 
-  if (isLoading) return (<div className="animate-pulse space-y-4"><div className="h-6 bg-border rounded w-1/3" /><div className="h-4 bg-border rounded w-2/3" /><div className="h-4 bg-border rounded w-1/2" /></div>);
+  if (isLoading) return <PageSkeleton />;
 
   return (
     <div className="space-y-6">

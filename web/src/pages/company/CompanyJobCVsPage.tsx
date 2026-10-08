@@ -1,8 +1,31 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../lib/api';
 import CVPreviewPanel from '../../components/CVPreviewPanel';
+import PageSkeleton from '../../components/PageSkeleton';
+import {
+  Box,
+  Typography,
+  Card,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  Chip,
+  Button,
+} from '@mui/material';
+import {
+  Close as CloseIcon,
+  Visibility as VisibilityIcon,
+  ArrowBack as ArrowBackIcon,
+} from '@mui/icons-material';
 
 type MatchWithCV = {
   id: string;
@@ -11,6 +34,7 @@ type MatchWithCV = {
   application_id: string;
   skill_score: number;
   hard_filter_passed: boolean;
+  forwarding_status?: string;
   student: {
     id: string;
     full_name: string;
@@ -18,18 +42,12 @@ type MatchWithCV = {
     branch: string;
     cgpa: number;
   };
-  student_cv: {
-    id: string;
-    summary: string | null;
-    academic_record: any;
-    skills: string[] | null;
-    projects: any[] | null;
-    certifications: any[] | null;
-  } | null;
+  student_cv: any;
 };
 
 const CompanyJobCVsPage = () => {
   const { jobId } = useParams<{ jobId?: string }>();
+  const navigate = useNavigate();
   
   const { data: matches, isLoading } = useQuery<MatchWithCV[]>({
     queryKey: ['company-cvs', jobId],
@@ -42,70 +60,121 @@ const CompanyJobCVsPage = () => {
 
   const [selectedMatch, setSelectedMatch] = useState<MatchWithCV | null>(null);
 
-  if (isLoading) return (<div className="animate-pulse space-y-4"><div className="h-6 bg-border rounded w-1/3" /><div className="h-4 bg-border rounded w-2/3" /><div className="h-4 bg-border rounded w-1/2" /></div>);
+  if (isLoading) return <PageSkeleton />;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-h1 font-bold text-primary">Received CVs</h1>
-        <p className="text-text-secondary mt-1">Review approved candidates for your open positions.</p>
-      </div>
+    <Box sx={{ pb: 4 }}>
+      <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
+        {jobId && (
+          <IconButton onClick={() => navigate('/company/jobs')} sx={{ bgcolor: 'surface.main', border: '1px solid', borderColor: 'divider' }}>
+            <ArrowBackIcon />
+          </IconButton>
+        )}
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main', mb: 0.5 }}>
+            {jobId ? 'Job Applicants' : 'All Received CVs'}
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Review candidates that have been approved and forwarded for your open positions.
+          </Typography>
+        </Box>
+      </Box>
       
-      {matches?.length === 0 ? (
-        <div className="p-6 bg-surface border border-border rounded-lg text-text-secondary text-center">
-          No CVs have been forwarded to you yet. Check back later once the administration has reviewed applications.
-        </div>
+      {!matches || matches.length === 0 ? (
+        <Card variant="outlined" sx={{ p: 6, textAlign: 'center' }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>No CVs Available</Typography>
+          <Typography variant="body2" color="text.secondary">
+            No candidates have been forwarded to you yet. Check back later once the administration has reviewed applications.
+          </Typography>
+        </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1 border border-border rounded-lg bg-surface overflow-hidden">
-            <ul className="divide-y divide-border h-[calc(100vh-250px)] overflow-y-auto">
-              {matches?.map((match) => (
-                <li 
-                  key={match.id} 
-                  className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${selectedMatch?.id === match.id ? 'bg-blue-50 border-l-4 border-blue-500' : 'border-l-4 border-transparent'}`}
-                  onClick={() => setSelectedMatch(match)}
-                >
-                  <div className="font-medium text-text">{match.student.full_name}</div>
-                  <div className="text-sm text-text-secondary flex justify-between mt-1">
-                    <span>{match.student.branch} • {match.student.cgpa.toFixed(2)} CGPA</span>
-                    <span className="font-semibold text-primary">{Math.round(match.skill_score * 100)}% Match</span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-          
-          <div className="lg:col-span-2">
-            {selectedMatch ? (
-              <div className="space-y-4">
-                <div className="flex justify-between items-start bg-surface p-6 rounded-lg border border-border shadow-sm">
-                  <div>
-                    <h2 className="text-2xl font-bold text-text">{selectedMatch.student.full_name}</h2>
-                    <p className="text-text-secondary">{selectedMatch.student.roll_number} • {selectedMatch.student.branch}</p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-3xl font-bold text-primary">{Math.round(selectedMatch.skill_score * 100)}%</div>
-                    <div className="text-xs text-text-secondary uppercase tracking-wide">Match Score</div>
-                  </div>
-                </div>
-                
-                {selectedMatch.student_cv ? (
-                  <CVPreviewPanel cv={selectedMatch.student_cv} />
-                ) : (
-                  <div className="p-6 bg-surface border border-border rounded-lg text-text-secondary text-center">
-                    CV details not available for this candidate.
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-full min-h-[400px] bg-surface border border-border rounded-lg text-text-secondary text-center">
-                Select a candidate from the list to view their CV.
-              </div>
-            )}
-          </div>
-        </div>
+        <Card variant="outlined" sx={{ overflow: 'hidden' }}>
+          <TableContainer sx={{ maxHeight: 'calc(100vh - 250px)' }}>
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600 }}>Candidate Name</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Roll Number</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Branch</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>CGPA</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Match Score</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }} align="right">Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {matches.map((match) => (
+                  <TableRow 
+                    key={match.id} 
+                    hover 
+                    sx={{ cursor: 'pointer', transition: 'background-color 0.2s' }}
+                    onClick={() => setSelectedMatch(match)}
+                  >
+                    <TableCell sx={{ fontWeight: 500 }}>{match.student.full_name}</TableCell>
+                    <TableCell>{match.student.roll_number}</TableCell>
+                    <TableCell>{match.student.branch}</TableCell>
+                    <TableCell>{match.student.cgpa?.toFixed(2) || 'N/A'}</TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={`${Math.round(match.skill_score * 100)}% Match`}
+                        color={match.skill_score > 0.7 ? 'success' : match.skill_score > 0.4 ? 'warning' : 'default'}
+                        size="small"
+                        sx={{ fontWeight: 600 }}
+                      />
+                    </TableCell>
+                    <TableCell align="right">
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<VisibilityIcon />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedMatch(match);
+                        }}
+                      >
+                        View CV
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Card>
       )}
-    </div>
+
+      <Dialog 
+        open={Boolean(selectedMatch)} 
+        onClose={() => setSelectedMatch(null)}
+        maxWidth="md"
+        fullWidth
+        scroll="paper"
+      >
+        <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: 1, borderColor: 'divider' }}>
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              {selectedMatch?.student.full_name}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {selectedMatch?.student.roll_number} • {selectedMatch?.student.branch} • {selectedMatch?.student.cgpa} CGPA
+            </Typography>
+          </Box>
+          <IconButton onClick={() => setSelectedMatch(null)} size="small" sx={{ color: 'text.secondary' }}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: 0, bgcolor: 'background.default' }}>
+          {selectedMatch?.student_cv ? (
+            <CVPreviewPanel cv={selectedMatch.student_cv} />
+          ) : (
+            <Box sx={{ p: 6, textAlign: 'center' }}>
+              <Typography variant="body1" color="text.secondary">
+                CV details not available for this candidate.
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+      </Dialog>
+    </Box>
   );
 };
 

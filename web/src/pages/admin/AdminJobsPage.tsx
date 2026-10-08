@@ -1,3 +1,4 @@
+import PageSkeleton from '../../components/PageSkeleton';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import api from '../../lib/api';
@@ -19,7 +20,7 @@ const AdminJobsPage = () => {
     }
   });
 
-  if (isLoading) return (<div className="animate-pulse space-y-4"><div className="h-6 bg-border rounded w-1/3" /><div className="h-4 bg-border rounded w-2/3" /><div className="h-4 bg-border rounded w-1/2" /></div>);
+  if (isLoading) return <PageSkeleton />;
 
   return (
     <div className="space-y-6">

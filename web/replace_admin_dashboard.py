@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
+with open("src/pages/admin/AdminDashboardPage.tsx", "w") as f:
+    f.write("""import { useQuery } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router-dom';
 import api from '../../lib/api';
 import PageSkeleton from '../../components/PageSkeleton';
@@ -18,6 +19,7 @@ import {
   Description as DescriptionIcon,
   CheckCircle as CheckCircleIcon,
   Warning as WarningIcon,
+  RateReview as RateReviewIcon,
 } from '@mui/icons-material';
 
 type QueueSummary = {
@@ -172,3 +174,4 @@ export default function AdminDashboardPage() {
     </Box>
   );
 }
+""")

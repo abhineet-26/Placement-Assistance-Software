@@ -1,6 +1,30 @@
+import PageSkeleton from '../../components/PageSkeleton';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../lib/api';
 import StatusBadge from '../../components/StatusBadge';
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+  Grid,
+ 
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions
+} from '@mui/material';
+import { Assignment as AssignmentIcon } from '@mui/icons-material';
+import { useState } from 'react';
 
 type ApplicationWithJob = {
   id: string;
@@ -32,6 +56,7 @@ type Offer = {
 
 const ApplicationsPage = () => {
   const queryClient = useQueryClient();
+  const [withdrawAppId, setWithdrawAppId] = useState<string | null>(null);
 
   const { data: applications, isLoading } = useQuery<ApplicationWithJob[]>({
     queryKey: ['my-applications'],
@@ -58,6 +83,7 @@ const ApplicationsPage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-applications'] });
+      setWithdrawAppId(null);
     }
   });
 
@@ -72,133 +98,181 @@ const ApplicationsPage = () => {
     },
   });
 
-  if (isLoading || interviewsLoading || offersLoading) {
-    return (
-      <div className="space-y-6">
-        <h1 className="text-h1 font-bold text-primary">My Applications</h1>
-        <div className="bg-surface rounded-xl shadow-card p-4 space-y-4">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-16 bg-background rounded animate-pulse" />
-          ))}
-        </div>
-      </div>
-    );
+  const isLoadingData = isLoading || interviewsLoading || offersLoading;
+
+  if (isLoadingData) {
+    return <PageSkeleton />;
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-h1 font-bold text-primary mb-1">My Applications</h1>
-        <p className="text-text-secondary">Track the status of jobs you've applied for.</p>
-      </div>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <Box>
+        <Typography variant="h4" color="primary.main" gutterBottom sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+          My Applications
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          Track the status of jobs you've applied for.
+        </Typography>
+      </Box>
       
       {!applications || applications.length === 0 ? (
-        <div className="bg-surface border border-border rounded-xl p-12 text-center shadow-card flex flex-col items-center justify-center">
-          <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mb-4">
-            <svg className="w-10 h-10 text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-          </div>
-          <h2 className="text-xl font-bold text-text-primary mb-2">No applications yet</h2>
-          <p className="text-text-secondary max-w-md">You haven't applied to any jobs yet. Check out the opportunities page to find your next role.</p>
-        </div>
+        <Card variant="outlined" sx={{ borderRadius: 2, p: 8, textAlign: 'center', borderStyle: 'dashed' }}>
+          <Box sx={{ display: 'inline-flex', p: 2, borderRadius: '50%', bgcolor: 'primary.50', color: 'primary.main', mb: 2 }}>
+            <AssignmentIcon fontSize="large" />
+          </Box>
+          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>No applications yet</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 400, mx: 'auto' }}>
+            You haven't applied to any jobs yet. Check out the opportunities page to find your next role.
+          </Typography>
+        </Card>
       ) : (
-        <div className="bg-surface rounded-xl shadow-card overflow-hidden">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50/80 border-b border-border/60">
-                <th className="p-5 font-semibold text-sm text-text-secondary uppercase tracking-wider">Job Title</th>
-                <th className="p-5 font-semibold text-sm text-text-secondary uppercase tracking-wider">Company</th>
-                <th className="p-5 font-semibold text-sm text-text-secondary uppercase tracking-wider">Applied On</th>
-                <th className="p-5 font-semibold text-sm text-text-secondary uppercase tracking-wider">Status</th>
-                <th className="p-5 font-semibold text-sm text-text-secondary uppercase tracking-wider text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/50">
-              {applications.map((app, idx) => (
-                <tr key={app.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'} hover:bg-gray-50 transition-colors`}>
-                  <td className="p-5 font-medium text-text-primary">
-                    {app.job_summary?.title || 'Unknown Job'}
-                  </td>
-                  <td className="p-5 text-text-secondary">
-                    {app.job_summary?.company_name || 'Unknown Company'}
-                  </td>
-                  <td className="p-5 text-text-secondary">
-                    {new Date(app.created_at).toLocaleDateString()}
-                  </td>
-                  <td className="p-5">
-                    <StatusBadge status={app.status.replace('_', ' ')} />
-                  </td>
-                  <td className="p-5 text-right">
-                    {(app.status === 'applied' || app.status === 'interview_scheduled') && (
-                      <button
-                        onClick={() => {
-                          if (confirm('Are you sure you want to withdraw this application?')) {
-                            withdrawMutation.mutate(app.id);
-                          }
-                        }}
-                        disabled={withdrawMutation.isPending && withdrawMutation.variables === app.id}
-                        className="text-sm px-3 py-1.5 rounded text-danger hover:bg-danger/10 font-medium disabled:opacity-50 transition-colors"
-                      >
-                        Withdraw
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Card variant="outlined" sx={{ borderRadius: 2, overflow: 'hidden' }}>
+          <TableContainer component={Paper} elevation={0}>
+            <Table sx={{ minWidth: 650 }} aria-label="applications table">
+              <TableHead sx={{ bgcolor: 'grey.50' }}>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>Job Title</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>Company</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>Applied On</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>Status</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase' }}>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {applications.map((app) => (
+                  <TableRow
+                    key={app.id}
+                    sx={{ '&:last-child td, &:last-child th': { border: 0 }, '&:hover': { bgcolor: 'grey.50' } }}
+                  >
+                    <TableCell component="th" scope="row" sx={{ fontWeight: 500 }}>
+                      {app.job_summary?.title || 'Unknown Job'}
+                    </TableCell>
+                    <TableCell color="text.secondary">
+                      {app.job_summary?.company_name || 'Unknown Company'}
+                    </TableCell>
+                    <TableCell color="text.secondary">
+                      {new Date(app.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={app.status.replace('_', ' ')} />
+                    </TableCell>
+                    <TableCell align="right">
+                      {(app.status === 'applied' || app.status === 'interview_scheduled') && (
+                        <Button 
+                          color="error"
+                          variant="text"
+                          size="small"
+                          onClick={() => setWithdrawAppId(app.id)}
+                          disabled={withdrawMutation.isPending && withdrawMutation.variables === app.id}
+                        >
+                          Withdraw
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Card>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        {applications?.map((app) => {
-          const interview = interviews?.find((item) => item.application_id === app.id);
-          const offer = offers?.find((item) => item.application_id === app.id);
-          if (!interview && !offer) return null;
+      {applications && applications.length > 0 && (
+        <Grid container spacing={4} sx={{ mt: 2 }}>
+          {applications.map((app) => {
+            const interview = interviews?.find((item) => item.application_id === app.id);
+            const offer = offers?.find((item) => item.application_id === app.id);
+            if (!interview && !offer) return null;
 
-          return (
-            <article key={`${app.id}-details`} className="rounded-lg border border-border bg-surface p-5">
-              <p className="text-sm font-semibold uppercase tracking-wider text-accent">{app.job_summary?.title || 'Application'}</p>
-              {interview && (
-                <div className="mt-3 border-l-2 border-warning pl-3">
-                  <h2 className="font-semibold text-primary">Interview {interview.status}</h2>
-                  <p className="text-sm text-text-secondary">
-                    {new Date(interview.scheduled_at).toLocaleString()} · {interview.location_or_mode}
-                  </p>
-                </div>
-              )}
-              {offer && (
-                <div className="mt-4 border-l-2 border-success pl-3">
-                  <h2 className="font-semibold text-primary">Offer {offer.status}</h2>
-                  <p className="mt-1 text-sm text-text-secondary">
-                    {Object.entries(offer.offer_details).map(([key, value]) => `${key}: ${String(value)}`).join(' · ')}
-                  </p>
-                  {offer.status === 'extended' && (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => offerDecisionMutation.mutate({ offerId: offer.id, status: 'accepted' })}
-                        disabled={offerDecisionMutation.isPending}
-                        className="rounded bg-success px-3 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
-                      >
-                        Accept offer
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => offerDecisionMutation.mutate({ offerId: offer.id, status: 'declined' })}
-                        disabled={offerDecisionMutation.isPending}
-                        className="rounded border border-danger px-3 py-2 text-sm font-semibold text-danger hover:bg-red-50 disabled:opacity-50"
-                      >
-                        Decline offer
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </article>
-          );
-        })}
-      </div>
-    </div>
+            return (
+              <Grid size={{xs: 12, md: 6}} key={`${app.id}-details`}>
+                <Card variant="outlined" sx={{ borderRadius: 2, height: '100%' }}>
+                  <CardContent sx={{ p: 3 }}>
+                    <Typography variant="overline" color="primary.main" gutterBottom sx={{ fontWeight: 600 }}>
+                      {app.job_summary?.title || 'Application'} Updates
+                    </Typography>
+                    
+                    {interview && (
+                      <Box sx={{ mt: 2, pl: 2, borderLeft: 3, borderColor: 'warning.main' }}>
+                        <Typography variant="subtitle2" color="text.primary" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                          Interview {interview.status}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                          {new Date(interview.scheduled_at).toLocaleString()} · {interview.location_or_mode}
+                        </Typography>
+                      </Box>
+                    )}
+                    
+                    {offer && (
+                      <Box sx={{ mt: 3, pl: 2, borderLeft: 3, borderColor: 'success.main' }}>
+                        <Typography variant="subtitle2" color="text.primary" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                          Offer {offer.status}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                          {Object.entries(offer.offer_details).map(([key, value]) => `${key}: ${String(value)}`).join(' · ')}
+                        </Typography>
+                        
+                        {offer.status === 'extended' && (
+                          <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                            <Button
+                              variant="contained"
+                              color="success"
+                              size="small"
+                              disableElevation
+                              onClick={() => offerDecisionMutation.mutate({ offerId: offer.id, status: 'accepted' })}
+                              disabled={offerDecisionMutation.isPending}
+                            >
+                              Accept offer
+                            </Button>
+                            <Button
+                              variant="outlined"
+                              color="error"
+                              size="small"
+                              onClick={() => offerDecisionMutation.mutate({ offerId: offer.id, status: 'declined' })}
+                              disabled={offerDecisionMutation.isPending}
+                            >
+                              Decline offer
+                            </Button>
+                          </Box>
+                        )}
+                      </Box>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+            );
+          })}
+        </Grid>
+      )}
+
+      {/* Confirmation Dialog for Withdrawal */}
+      <Dialog
+        open={Boolean(withdrawAppId)}
+        onClose={() => setWithdrawAppId(null)}
+      >
+        <DialogTitle>Confirm Withdrawal</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to withdraw this application? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setWithdrawAppId(null)} color="inherit">Cancel</Button>
+          <Button 
+            onClick={() => {
+              if (withdrawAppId) withdrawMutation.mutate(withdrawAppId);
+            }} 
+            color="error" 
+            variant="contained" 
+            disableElevation
+            disabled={withdrawMutation.isPending}
+          >
+            {withdrawMutation.isPending ? 'Withdrawing...' : 'Withdraw'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+    </Box>
   );
 };
 

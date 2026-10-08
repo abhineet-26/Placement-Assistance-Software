@@ -1,3 +1,4 @@
+import PageSkeleton from '../components/PageSkeleton';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../lib/api';
 
@@ -44,7 +45,7 @@ export default function NotificationsPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
   });
 
-  if (isLoading) return (<div className="animate-pulse space-y-4"><div className="h-6 bg-border rounded w-1/3" /><div className="h-4 bg-border rounded w-2/3" /><div className="h-4 bg-border rounded w-1/2" /></div>);
+  if (isLoading) return <PageSkeleton />;
   if (isError) return <div className="rounded-lg border border-danger/20 bg-red-50 p-8 text-danger">Unable to load notifications right now.</div>;
 
   const unreadCount = notifications?.filter((notification) => !notification.read_at).length || 0;

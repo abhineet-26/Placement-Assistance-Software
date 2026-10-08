@@ -1,6 +1,24 @@
+import PageSkeleton from '../../components/PageSkeleton';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import api from '../../lib/api';
+import {
+  Box,
+  Typography,
+  Card, CircularProgress,
+  CardContent,
+  Button,
+  TextField,
+ 
+ 
+  Alert
+} from '@mui/material';
+import { 
+  Description as DescriptionIcon, 
+  UploadFile as UploadIcon, 
+  CloudDownload as DownloadIcon,
+  Save as SaveIcon
+} from '@mui/icons-material';
 
 interface CV {
   summary?: string;
@@ -41,6 +59,8 @@ const uploadCVPdf = async (file: File): Promise<CV> => {
 const CVEditorPage = () => {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<{summary: string, skills: string}>({ summary: '', skills: '' });
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const { data: cv, isLoading, isError } = useQuery({
     queryKey: ['studentCV'],
@@ -51,7 +71,8 @@ const CVEditorPage = () => {
     mutationFn: updateCV,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['studentCV'] });
-      alert("CV Updated Successfully");
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
     },
   });
 
@@ -59,7 +80,8 @@ const CVEditorPage = () => {
     mutationFn: uploadCVPdf,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['studentCV'] });
-      alert("CV PDF Uploaded Successfully");
+      setUploadSuccess(true);
+      setTimeout(() => setUploadSuccess(false), 3000);
     },
   });
 
@@ -88,8 +110,10 @@ const CVEditorPage = () => {
     }
   };
 
-  if (isLoading) return (<div className="animate-pulse space-y-4"><div className="h-6 bg-border rounded w-1/3" /><div className="h-4 bg-border rounded w-2/3" /><div className="h-4 bg-border rounded w-1/2" /></div>);
-  if (isError || !cv) return <div>Error loading CV</div>;
+  if (isLoading) {
+    return <PageSkeleton />;
+  }
+  if (isError || !cv) return <Typography color="error">Error loading CV</Typography>;
 
   const handleInitEdit = () => {
     setFormData({
@@ -112,77 +136,128 @@ const CVEditorPage = () => {
   };
 
   return (
-    <div className="bg-surface rounded-lg shadow-sm border border-border p-6">
-      <h2 className="text-2xl font-semibold mb-2 text-primary">My CV (Version: {cv.version})</h2>
-      <p className="text-text-secondary mb-6">Manage your CV content. Updates will overwrite the current version, but admins can view history.</p>
-      
-      <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
-        <div>
-          <label className="block text-sm font-medium mb-1">Summary</label>
-          <textarea 
-            name="summary"
-            rows={4}
-            value={formData.summary === '' && !mutation.isPending && cv.summary ? cv.summary : formData.summary}
-            onChange={handleChange}
-            onFocus={() => {
-                if(formData.summary === '' && cv.summary) handleInitEdit();
-            }}
-            className="w-full p-2 border border-border rounded bg-background"
-            placeholder="Write a brief professional summary..."
-          />
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium mb-1">Skills (comma separated)</label>
-          <input 
-            name="skills"
-            value={formData.skills === '' && !mutation.isPending && cv.skills ? cv.skills.join(', ') : formData.skills}
-            onChange={handleChange}
-            onFocus={() => {
-                if(formData.skills === '' && cv.skills) handleInitEdit();
-            }}
-            className="w-full p-2 border border-border rounded bg-background"
-            placeholder="e.g. Python, React, PostgreSQL"
-          />
-        </div>
-        
-        <button 
-          type="submit"
-          disabled={mutation.isPending}
-          className="px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90 disabled:opacity-50"
-        >
-          {mutation.isPending ? 'Saving...' : 'Save CV'}
-        </button>
-      </form>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4, maxWidth: 900, mx: 'auto' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box sx={{ p: 1.5, bgcolor: 'primary.50', borderRadius: '50%', color: 'primary.main', display: 'flex' }}>
+          <DescriptionIcon fontSize="large" />
+        </Box>
+        <Box>
+          <Typography variant="h4" color="primary.main" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+            My CV
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Manage your CV and skills. Version: {cv.version}
+          </Typography>
+        </Box>
+      </Box>
 
-      <hr className="my-8 border-border" />
-      <h3 className="text-xl font-semibold mb-4 text-primary">Upload PDF CV</h3>
-      <div className="max-w-2xl">
-        <input 
-          type="file" 
-          accept=".pdf"
-          onChange={handleFileUpload}
-          disabled={uploadMutation.isPending}
-          className="block w-full text-sm text-text-secondary
-            file:mr-4 file:py-2 file:px-4
-            file:rounded file:border-0
-            file:text-sm file:font-semibold
-            file:bg-primary file:text-white
-            hover:file:bg-opacity-90 cursor-pointer"
-        />
-        {uploadMutation.isPending && <p className="text-sm mt-2 text-text-secondary">Uploading...</p>}
-        {cv.pdf_file_path && (
-          <div className="mt-4">
-            <button 
-              onClick={handleDownload}
-              className="text-primary hover:underline font-medium"
+      {/* PDF Upload Section */}
+      <Card variant="outlined" sx={{ borderRadius: 2 }}>
+        <CardContent sx={{ p: 4 }}>
+          <Typography variant="h6" gutterBottom sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+            Resume Document (PDF)
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Upload your professional resume in PDF format. This document will be shared with companies when you apply.
+          </Typography>
+
+          {uploadSuccess && (
+            <Alert severity="success" sx={{ mb: 3 }}>PDF uploaded successfully!</Alert>
+          )}
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', mt: 3 }}>
+            <Button
+              component="label"
+              variant="contained"
+              disableElevation
+              startIcon={uploadMutation.isPending ? <CircularProgress size={20} color="inherit" /> : <UploadIcon />}
+              disabled={uploadMutation.isPending}
             >
-              View/Download Uploaded PDF
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
+              {uploadMutation.isPending ? 'Uploading...' : 'Upload PDF'}
+              <input
+                type="file"
+                accept=".pdf"
+                hidden
+                onChange={handleFileUpload}
+              />
+            </Button>
+            
+            {cv.pdf_file_path && (
+              <Button
+                variant="outlined"
+                color="secondary"
+                startIcon={<DownloadIcon />}
+                onClick={handleDownload}
+              >
+                View / Download Current CV
+              </Button>
+            )}
+          </Box>
+        </CardContent>
+      </Card>
+
+      {/* Extracted Details Section */}
+      <Card variant="outlined" sx={{ borderRadius: 2 }}>
+        <CardContent sx={{ p: 4 }}>
+          <Typography variant="h6" gutterBottom sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+            CV Information
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            This information is extracted or manually entered and can be used for quick filtering by recruiters.
+          </Typography>
+
+          {saveSuccess && (
+            <Alert severity="success" sx={{ mb: 3 }}>Information saved successfully!</Alert>
+          )}
+
+          <form onSubmit={handleSubmit}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 3 }}>
+              <TextField
+                label="Professional Summary"
+                name="summary"
+                multiline
+                rows={4}
+                fullWidth
+                value={formData.summary === '' && !mutation.isPending && cv.summary ? cv.summary : formData.summary}
+                onChange={handleChange}
+                onFocus={() => {
+                    if(formData.summary === '' && cv.summary) handleInitEdit();
+                }}
+                placeholder="Write a brief professional summary..."
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+              
+              <TextField
+                label="Skills (comma separated)"
+                name="skills"
+                fullWidth
+                value={formData.skills === '' && !mutation.isPending && cv.skills ? cv.skills.join(', ') : formData.skills}
+                onChange={handleChange}
+                onFocus={() => {
+                    if(formData.skills === '' && cv.skills) handleInitEdit();
+                }}
+                placeholder="e.g. Python, React, PostgreSQL"
+                slotProps={{ inputLabel: { shrink: true } }}
+                helperText="Companies often search by skills. Include your key technical and soft skills."
+              />
+              
+              <Box sx={{ alignSelf: 'flex-end' }}>
+                <Button 
+                  type="submit" 
+                  variant="contained" 
+                  color="primary"
+                  disableElevation
+                  startIcon={mutation.isPending ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+                  disabled={mutation.isPending}
+                >
+                  {mutation.isPending ? 'Saving...' : 'Save Details'}
+                </Button>
+              </Box>
+            </Box>
+          </form>
+        </CardContent>
+      </Card>
+    </Box>
   );
 };
 

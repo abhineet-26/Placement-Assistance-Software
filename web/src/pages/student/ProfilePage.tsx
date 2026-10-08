@@ -1,6 +1,21 @@
+import PageSkeleton from '../../components/PageSkeleton';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import api from '../../lib/api';
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  Grid,
+  Button,
+  TextField,
+  CircularProgress,
+  
+  Stack,
+  Chip
+} from '@mui/material';
+import { Edit as EditIcon, Save as SaveIcon, Cancel as CancelIcon, Person as PersonIcon } from '@mui/icons-material';
 
 interface StudentProfile {
   id: string;
@@ -44,8 +59,11 @@ const ProfilePage = () => {
     },
   });
 
-  if (isLoading) return (<div className="animate-pulse space-y-4"><div className="h-6 bg-border rounded w-1/3" /><div className="h-4 bg-border rounded w-2/3" /><div className="h-4 bg-border rounded w-1/2" /></div>);
-  if (isError || !profile) return <div>Error loading profile</div>;
+  if (isLoading) {
+    return <PageSkeleton />;
+  }
+
+  if (isError || !profile) return <Typography color="error">Error loading profile</Typography>;
 
   const handleEdit = () => {
     setFormData(profile);
@@ -71,141 +89,191 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="bg-surface rounded-lg shadow-sm border border-border p-6">
-      <h2 className="text-2xl font-semibold mb-6 text-primary">My Profile</h2>
-      
-      {!isEditing ? (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-text-secondary">Full Name</p>
-              <p className="font-medium">{profile.full_name}</p>
-            </div>
-            <div>
-              <p className="text-sm text-text-secondary">Roll Number</p>
-              <p className="font-medium">{profile.roll_number}</p>
-            </div>
-            <div>
-              <p className="text-sm text-text-secondary">Phone</p>
-              <p className="font-medium">{profile.phone || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-text-secondary">Programme</p>
-              <p className="font-medium">{profile.programme || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-text-secondary">Branch</p>
-              <p className="font-medium">{profile.branch || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-text-secondary">Batch Year</p>
-              <p className="font-medium">{profile.batch_year || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-text-secondary">CGPA</p>
-              <p className="font-medium">{profile.cgpa || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-text-secondary">Backlogs</p>
-              <p className="font-medium">{profile.backlogs ?? 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-text-secondary">Enrollment Status</p>
-              <p className="font-medium capitalize">{profile.enrollment_status}</p>
-            </div>
-            <div>
-              <p className="text-sm text-text-secondary">Placement Status</p>
-              <p className="font-medium capitalize">{profile.placement_status.replace('_', ' ')}</p>
-            </div>
-          </div>
-          
-          <button 
-            onClick={handleEdit}
-            className="mt-4 px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90"
-          >
-            Edit Profile
-          </button>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-4 max-w-lg">
-          <div>
-            <label className="block text-sm font-medium mb-1">Phone</label>
-            <input 
-              name="phone"
-              value={formData.phone || ''}
-              onChange={handleChange}
-              className="w-full p-2 border border-border rounded bg-background"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Programme</label>
-            <input 
-              name="programme"
-              value={formData.programme || ''}
-              onChange={handleChange}
-              className="w-full p-2 border border-border rounded bg-background"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Branch</label>
-            <input 
-              name="branch"
-              value={formData.branch || ''}
-              onChange={handleChange}
-              className="w-full p-2 border border-border rounded bg-background"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Batch Year</label>
-            <input 
-              name="batch_year"
-              type="number"
-              value={formData.batch_year || ''}
-              onChange={handleChange}
-              className="w-full p-2 border border-border rounded bg-background"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">CGPA</label>
-            <input 
-              name="cgpa"
-              type="number"
-              step="0.01"
-              value={formData.cgpa || ''}
-              onChange={handleChange}
-              className="w-full p-2 border border-border rounded bg-background"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Backlogs</label>
-            <input 
-              name="backlogs"
-              type="number"
-              value={formData.backlogs ?? ''}
-              onChange={handleChange}
-              className="w-full p-2 border border-border rounded bg-background"
-            />
-          </div>
-          
-          <div className="flex space-x-3 pt-4">
-            <button 
-              type="submit"
-              disabled={mutation.isPending}
-              className="px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90 disabled:opacity-50"
-            >
-              {mutation.isPending ? 'Saving...' : 'Save Changes'}
-            </button>
-            <button 
-              type="button"
-              onClick={handleCancel}
-              className="px-4 py-2 bg-surface border border-border rounded hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      )}
-    </div>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4, maxWidth: 900, mx: 'auto' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box sx={{ p: 1.5, bgcolor: 'primary.50', borderRadius: '50%', color: 'primary.main', display: 'flex' }}>
+          <PersonIcon fontSize="large" />
+        </Box>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1.2 }} color="primary.main">
+            My Profile
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Manage your personal and academic information.
+          </Typography>
+        </Box>
+      </Box>
+
+      <Card variant="outlined" sx={{ borderRadius: 2 }}>
+        <CardContent sx={{ p: 0 }}>
+          {/* Header section with Name & Roll No */}
+          <Box sx={{ p: 4, bgcolor: 'grey.50', borderBottom: 1, borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+            <Box>
+              <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.2 }} gutterBottom>
+                {profile.full_name}
+              </Typography>
+              <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                  Roll Number: {profile.roll_number}
+                </Typography>
+                <Chip size="small" label={profile.enrollment_status} color={profile.enrollment_status === 'active' ? 'success' : 'default'} sx={{ textTransform: 'capitalize', height: 20, fontSize: '0.7rem' }} />
+                <Chip size="small" label={profile.placement_status.replace('_', ' ')} color={profile.placement_status === 'placed' ? 'success' : profile.placement_status === 'unplaced' ? 'primary' : 'default'} sx={{ textTransform: 'capitalize', height: 20, fontSize: '0.7rem' }} />
+              </Stack>
+            </Box>
+            {!isEditing && (
+              <Button 
+                variant="outlined" 
+                startIcon={<EditIcon />} 
+                onClick={handleEdit}
+                sx={{ borderRadius: 2 }}
+              >
+                Edit Details
+              </Button>
+            )}
+          </Box>
+
+          {/* Form / View Section */}
+          <Box sx={{ p: 4 }}>
+            {!isEditing ? (
+              <Grid container spacing={4}>
+                <Grid size={{xs: 12, sm: 6, md: 4}}>
+                  <Typography variant="caption" color="text.disabled" sx={{ fontWeight: 600, textTransform: "uppercase", display: "block" }} gutterBottom>
+                    Phone
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                    {profile.phone || 'Not provided'}
+                  </Typography>
+                </Grid>
+                <Grid size={{xs: 12, sm: 6, md: 4}}>
+                  <Typography variant="caption" color="text.disabled" sx={{ fontWeight: 600, textTransform: "uppercase", display: "block" }} gutterBottom>
+                    Programme
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                    {profile.programme || 'Not provided'}
+                  </Typography>
+                </Grid>
+                <Grid size={{xs: 12, sm: 6, md: 4}}>
+                  <Typography variant="caption" color="text.disabled" sx={{ fontWeight: 600, textTransform: "uppercase", display: "block" }} gutterBottom>
+                    Branch
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                    {profile.branch || 'Not provided'}
+                  </Typography>
+                </Grid>
+                <Grid size={{xs: 12, sm: 6, md: 4}}>
+                  <Typography variant="caption" color="text.disabled" sx={{ fontWeight: 600, textTransform: "uppercase", display: "block" }} gutterBottom>
+                    Batch Year
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                    {profile.batch_year || 'Not provided'}
+                  </Typography>
+                </Grid>
+                <Grid size={{xs: 12, sm: 6, md: 4}}>
+                  <Typography variant="caption" color="text.disabled" sx={{ fontWeight: 600, textTransform: "uppercase", display: "block" }} gutterBottom>
+                    CGPA
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                    {profile.cgpa || 'Not provided'}
+                  </Typography>
+                </Grid>
+                <Grid size={{xs: 12, sm: 6, md: 4}}>
+                  <Typography variant="caption" color="text.disabled" sx={{ fontWeight: 600, textTransform: "uppercase", display: "block" }} gutterBottom>
+                    Backlogs
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                    {profile.backlogs ?? 'Not provided'}
+                  </Typography>
+                </Grid>
+              </Grid>
+            ) : (
+              <form onSubmit={handleSubmit}>
+                <Grid container spacing={3}>
+                  <Grid size={{xs: 12, sm: 6}}>
+                    <TextField
+                      fullWidth
+                      label="Phone"
+                      name="phone"
+                      value={formData.phone || ''}
+                      onChange={handleChange}
+                    />
+                  </Grid>
+                  <Grid size={{xs: 12, sm: 6}}>
+                    <TextField
+                      fullWidth
+                      label="Programme"
+                      name="programme"
+                      value={formData.programme || ''}
+                      onChange={handleChange}
+                    />
+                  </Grid>
+                  <Grid size={{xs: 12, sm: 6}}>
+                    <TextField
+                      fullWidth
+                      label="Branch"
+                      name="branch"
+                      value={formData.branch || ''}
+                      onChange={handleChange}
+                    />
+                  </Grid>
+                  <Grid size={{xs: 12, sm: 6}}>
+                    <TextField
+                      fullWidth
+                      label="Batch Year"
+                      name="batch_year"
+                      type="number"
+                      value={formData.batch_year || ''}
+                      onChange={handleChange}
+                    />
+                  </Grid>
+                  <Grid size={{xs: 12, sm: 6}}>
+                    <TextField
+                      fullWidth
+                      label="CGPA"
+                      name="cgpa"
+                      type="number"
+                      slotProps={{ htmlInput: { step: '0.01' } }}
+                      value={formData.cgpa || ''}
+                      onChange={handleChange}
+                    />
+                  </Grid>
+                  <Grid size={{xs: 12, sm: 6}}>
+                    <TextField
+                      fullWidth
+                      label="Backlogs"
+                      name="backlogs"
+                      type="number"
+                      value={formData.backlogs ?? ''}
+                      onChange={handleChange}
+                    />
+                  </Grid>
+                </Grid>
+                
+                <Box sx={{ mt: 4, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                  <Button 
+                    variant="text" 
+                    color="inherit" 
+                    onClick={handleCancel}
+                    startIcon={<CancelIcon />}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    variant="contained" 
+                    color="primary" 
+                    disableElevation
+                    disabled={mutation.isPending}
+                    startIcon={mutation.isPending ? <CircularProgress size={20} /> : <SaveIcon />}
+                  >
+                    Save Changes
+                  </Button>
+                </Box>
+              </form>
+            )}
+          </Box>
+        </CardContent>
+      </Card>
+    </Box>
   );
 };
 

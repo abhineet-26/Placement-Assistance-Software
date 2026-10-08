@@ -1,20 +1,27 @@
+import { Chip } from '@mui/material';
+
 export default function StatusBadge({ status, className = '' }: { status: string; className?: string }) {
   const normalized = (status || '').toLowerCase();
   
-  let colors = 'bg-gray-100 text-gray-700';
+  let color: "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning" = "default";
+  
   if (['active', 'approved', 'placed', 'hired', 'accepted', 'completed'].includes(normalized)) {
-    colors = 'bg-green-100 text-green-800';
+    color = "success";
   } else if (['pending', 'in-progress'].includes(normalized)) {
-    colors = 'bg-orange-100 text-orange-800';
+    color = "warning";
   } else if (['rejected', 'cancelled', 'failed'].includes(normalized)) {
-    colors = 'bg-red-100 text-red-800';
+    color = "error";
   } else if (['shortlisted', 'interview'].includes(normalized)) {
-    colors = 'bg-blue-100 text-blue-800';
+    color = "info";
   }
 
   return (
-    <span className={`px-2.5 py-1 text-xs font-medium rounded-full capitalize whitespace-nowrap ${colors} ${className}`}>
-      {status}
-    </span>
+    <Chip 
+      label={status} 
+      color={color} 
+      size="small"
+      className={`capitalize font-medium ${className}`} 
+      sx={{ height: 24, fontSize: '0.75rem', fontWeight: 600 }}
+    />
   );
 }
