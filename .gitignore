@@ -12,3 +12,4 @@ web/dist/
 web/playwright-report/
 web/test-results/
 /.github/agents/
+/.agents/skills/
