@@ -7,6 +7,7 @@ databases:
 services:
   - type: web
     name: placement_api
+    plan: free
     env: python
     rootDir: api
     buildCommand: "./render-build.sh"
