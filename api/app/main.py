@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from app.api.endpoints import auth, students, cv, companies, jobs, applications, matching, notifications, interviews, offers, feedback, admin
 from app.core.auth import require_role, require_approved_company
@@ -9,6 +10,15 @@ app = FastAPI(
     title="Placement Assistant Software API",
     description="API for the Placement Assistant platform",
     version="1.0.0",
+)
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
 )
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
