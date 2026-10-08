@@ -1,10 +1,10 @@
-services:
-  - type: psql
-    name: placement_db
-    plan: free
+databases:
+  - name: placement_db
     databaseName: placement_db
     user: placement_user
+    plan: free
 
+services:
   - type: web
     name: placement_api
     env: python
