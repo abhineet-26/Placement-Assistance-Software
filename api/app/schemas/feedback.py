@@ -6,7 +6,7 @@ from app.models.feedback import AuthorTypeEnum, TargetTypeEnum
 
 class FeedbackCreate(BaseModel):
     target_type: TargetTypeEnum
-    target_id: UUID4
+    target_id: Optional[UUID4] = None
     content: str
     rating: Optional[int] = None
 
@@ -30,7 +30,7 @@ class FeedbackOut(BaseModel):
     author_type: AuthorTypeEnum
     author_id: UUID4
     target_type: TargetTypeEnum
-    target_id: UUID4
+    target_id: Optional[UUID4]
     content: str
     rating: Optional[int]
     flagged: bool

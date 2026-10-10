@@ -8,7 +8,12 @@ export default function CompanyFeedbackPage() {
   const [success, setSuccess] = useState(false);
 
   const mutation = useMutation({
-    mutationFn: async () => await api.post('/feedback/company', { rating, comment }),
+    mutationFn: async () => await api.post('/feedback/', { 
+      target_type: 'platform',
+      target_id: null,
+      content: comment,
+      rating 
+    }),
     onSuccess: () => {
       setSuccess(true);
       setRating(5);

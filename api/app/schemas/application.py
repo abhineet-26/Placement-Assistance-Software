@@ -9,6 +9,9 @@ class ApplicationBase(BaseModel):
 class ApplicationCreate(ApplicationBase):
     pass
 
+class ApplicationStatusUpdate(BaseModel):
+    status: ApplicationStatusEnum
+
 class JobSummary(BaseModel):
     id: UUID4
     title: str

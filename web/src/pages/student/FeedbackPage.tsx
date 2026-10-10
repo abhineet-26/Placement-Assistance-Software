@@ -9,7 +9,12 @@ export default function StudentFeedbackPage() {
   const [success, setSuccess] = useState(false);
 
   const mutation = useMutation({
-    mutationFn: async () => await api.post('/feedback/student', { rating, comment, company_id: companyId }),
+    mutationFn: async () => await api.post('/feedback/', { 
+      target_type: 'platform', 
+      target_id: null,
+      content: companyId ? `[Subject: ${companyId}]\n\n${comment}` : comment,
+      rating 
+    }),
     onSuccess: () => {
       setSuccess(true);
       setRating(5);

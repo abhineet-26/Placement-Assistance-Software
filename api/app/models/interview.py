@@ -20,7 +20,7 @@ class Interview(Base):
     scheduled_at = Column(DateTime(timezone=True), nullable=False)
     location_or_mode = Column(String, nullable=False)
     status = Column(Enum(InterviewStatusEnum), default=InterviewStatusEnum.scheduled, nullable=False)
-    created_by = Column(UUID(as_uuid=True), ForeignKey("admins.id"), nullable=False)
+    created_by = Column(UUID(as_uuid=True), ForeignKey("admins.id"), nullable=True)
     
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)

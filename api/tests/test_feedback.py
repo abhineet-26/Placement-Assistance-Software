@@ -17,46 +17,29 @@ Acceptance checklist:
   non-admin GET /feedback                           -> 403
   non-admin PATCH /feedback/{id}/flag               -> 403
 """
-import json
 import uuid
-import urllib.request
-import urllib.error
 import pytest
+from fastapi.testclient import TestClient
+from app.main import app
 
-BASE = "http://localhost:8000"
+client = TestClient(app)
 
 
 # ---------------------------------------------------------------------------
 # Tiny HTTP client (no external deps)
 # ---------------------------------------------------------------------------
 
-class _Resp:
-    def __init__(self, status: int, body: bytes):
-        self.status_code = status
-        self._body = body
-
-    @property
-    def text(self):
-        return self._body.decode("utf-8", errors="replace")
-
-    def json(self):
-        return json.loads(self._body)
-
 
 def _req(method, path, *, token=None, data=None, params=None):
-    url = BASE + path + (("?" + params) if params else "")
-    body = json.dumps(data).encode() if data is not None else None
-    req = urllib.request.Request(
-        url, data=body, method=method,
-        headers={"Content-Type": "application/json", "Accept": "application/json"},
-    )
+    headers = {}
     if token:
-        req.add_header("Authorization", f"Bearer {token}")
-    try:
-        with urllib.request.urlopen(req) as r:
-            return _Resp(r.status, r.read())
-    except urllib.error.HTTPError as e:
-        return _Resp(e.code, e.read())
+        headers["Authorization"] = f"Bearer {token}"
+    
+    url = path
+    if params:
+        url = f"{path}?{params}"
+        
+    return client.request(method, url, json=data, headers=headers)
 
 
 def post(path, data=None, token=None):

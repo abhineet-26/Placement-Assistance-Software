@@ -12,6 +12,34 @@ app = FastAPI(
     version="1.0.0",
 )
 
+@app.on_event("startup")
+def startup_event():
+    from app.db.session import SessionLocal
+    from app.models.users import User, Admin, RoleEnum
+    from app.core.security import get_password_hash
+    db = SessionLocal()
+    try:
+        admin_email = "admin@placement.local"
+        if not db.query(User).filter(User.email == admin_email).first():
+            user = User(
+                email=admin_email,
+                password_hash=get_password_hash("admin123"),
+                role=RoleEnum.admin
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            admin_profile = Admin(
+                user_id=user.id,
+                full_name="System Administrator"
+            )
+            db.add(admin_profile)
+            db.commit()
+            print("Auto-seeded default admin account.")
+    finally:
+        db.close()
+
+
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,

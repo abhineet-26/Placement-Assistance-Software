@@ -9,7 +9,13 @@ from sqlalchemy import text
 
 db = SessionLocal()
 
-# Delete all tables (truncate)
+# Check if database is already seeded
+existing_admin = db.query(User).filter(User.email == "admin@demo.com").first()
+if existing_admin:
+    print("Database already seeded. Skipping.")
+    exit(0)
+
+# Delete all tables (truncate) - only happens if not seeded
 db.execute(text("TRUNCATE TABLE applications, job_requirements, companies, students, admins, users CASCADE"))
 db.commit()
 

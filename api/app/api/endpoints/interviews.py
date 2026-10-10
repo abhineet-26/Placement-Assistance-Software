@@ -22,18 +22,22 @@ def create_interview(
     background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user)
 ) -> Any:
-    if current_user.role != RoleEnum.admin:
+    if current_user.role not in [RoleEnum.admin, RoleEnum.company]:
         raise HTTPException(status_code=403, detail="Not enough permissions")
     
     application = db.query(Application).filter(Application.id == interview_in.application_id).first()
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")
         
+    if current_user.role == RoleEnum.company:
+        if not current_user.company or application.job.company_id != current_user.company.id:
+            raise HTTPException(status_code=403, detail="Not authorized to schedule interview for this application")
+        
     interview = Interview(
         application_id=interview_in.application_id,
         scheduled_at=interview_in.scheduled_at,
         location_or_mode=interview_in.location_or_mode,
-        created_by=current_user.admin.id
+        created_by=current_user.admin.id if current_user.role == RoleEnum.admin else None
     )
     db.add(interview)
     db.commit()
@@ -74,12 +78,16 @@ def update_interview(
     background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user)
 ) -> Any:
-    if current_user.role != RoleEnum.admin:
+    if current_user.role not in [RoleEnum.admin, RoleEnum.company]:
         raise HTTPException(status_code=403, detail="Not enough permissions")
         
     interview = db.query(Interview).filter(Interview.id == id).first()
     if not interview:
         raise HTTPException(status_code=404, detail="Interview not found")
+        
+    if current_user.role == RoleEnum.company:
+        if not current_user.company or interview.application.job.company_id != current_user.company.id:
+            raise HTTPException(status_code=403, detail="Not authorized to update this interview")
         
     update_data = interview_in.dict(exclude_unset=True)
     for field, value in update_data.items():

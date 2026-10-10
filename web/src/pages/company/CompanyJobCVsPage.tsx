@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../lib/api';
 import CVPreviewPanel from '../../components/CVPreviewPanel';
@@ -17,6 +17,8 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
+  DialogActions,
+  TextField,
   IconButton,
   Chip,
   Button,
@@ -59,6 +61,37 @@ const CompanyJobCVsPage = () => {
   });
 
   const [selectedMatch, setSelectedMatch] = useState<MatchWithCV | null>(null);
+  
+  const queryClient = useQueryClient();
+  const [schedulingInterview, setSchedulingInterview] = useState(false);
+  const [interviewDate, setInterviewDate] = useState('');
+  const [interviewLocation, setInterviewLocation] = useState('');
+
+  const statusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      await api.patch(`/applications/${id}/status`, { status });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['company-cvs'] });
+      setSelectedMatch(null);
+    }
+  });
+
+  const interviewMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedMatch) return;
+      await api.post('/interviews/', {
+        application_id: selectedMatch.application_id,
+        scheduled_at: new Date(interviewDate).toISOString(),
+        location_or_mode: interviewLocation
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['company-cvs'] });
+      setSchedulingInterview(false);
+      setSelectedMatch(null);
+    }
+  });
 
   if (isLoading) return <PageSkeleton />;
 
@@ -144,7 +177,10 @@ const CompanyJobCVsPage = () => {
 
       <Dialog 
         open={Boolean(selectedMatch)} 
-        onClose={() => setSelectedMatch(null)}
+        onClose={() => {
+          setSelectedMatch(null);
+          setSchedulingInterview(false);
+        }}
         maxWidth="md"
         fullWidth
         scroll="paper"
@@ -173,6 +209,67 @@ const CompanyJobCVsPage = () => {
             </Box>
           )}
         </DialogContent>
+        {selectedMatch && (
+          <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+            {!schedulingInterview ? (
+              <>
+                <Button 
+                  color="error" 
+                  onClick={() => statusMutation.mutate({ id: selectedMatch.application_id, status: 'rejected' })}
+                  disabled={statusMutation.isPending}
+                >
+                  Reject
+                </Button>
+                <Box sx={{ flex: 1 }} />
+                <Button 
+                  variant="outlined"
+                  onClick={() => statusMutation.mutate({ id: selectedMatch.application_id, status: 'shortlisted' })}
+                  disabled={statusMutation.isPending}
+                >
+                  Shortlist
+                </Button>
+                <Button 
+                  variant="contained" 
+                  onClick={() => setSchedulingInterview(true)}
+                >
+                  Schedule Interview
+                </Button>
+              </>
+            ) : (
+              <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 2, p: 1 }}>
+                <Typography variant="subtitle2">Schedule Interview</Typography>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <TextField 
+                    label="Date & Time" 
+                    type="datetime-local" 
+                    size="small" 
+                    slotProps={{ inputLabel: { shrink: true } }}
+                    value={interviewDate}
+                    onChange={(e) => setInterviewDate(e.target.value)}
+                    fullWidth
+                  />
+                  <TextField 
+                    label="Location or Meet Link" 
+                    size="small" 
+                    value={interviewLocation}
+                    onChange={(e) => setInterviewLocation(e.target.value)}
+                    fullWidth
+                  />
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 1 }}>
+                  <Button onClick={() => setSchedulingInterview(false)}>Cancel</Button>
+                  <Button 
+                    variant="contained" 
+                    onClick={() => interviewMutation.mutate()}
+                    disabled={!interviewDate || !interviewLocation || interviewMutation.isPending}
+                  >
+                    Confirm Schedule
+                  </Button>
+                </Box>
+              </Box>
+            )}
+          </DialogActions>
+        )}
       </Dialog>
     </Box>
   );

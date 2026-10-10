@@ -20,6 +20,7 @@ import {
   Select,
   MenuItem,
   Chip,
+  Alert,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -76,6 +77,10 @@ export default function AdminApplicationsPage() {
           View and monitor all student applications across jobs and companies.
         </Typography>
       </Box>
+
+      <Alert severity="info" sx={{ mb: 3 }}>
+        <strong>Looking to forward CVs to a company?</strong> Application forwarding is handled by the matching engine. To review and send matched candidates to companies, please use the <strong>Job Matches</strong> tab.
+      </Alert>
 
       {/* Summary chips */}
       <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1.5, flexWrap: 'wrap', mb: 3 }}>

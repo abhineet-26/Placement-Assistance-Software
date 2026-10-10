@@ -28,6 +28,9 @@ def _validate_student_interaction(
       - target_type=job      → must have applied to that job
       - target_type=interview→ must own an application whose interview matches
     """
+    if target_type == TargetTypeEnum.platform:
+        return
+
     if target_type == TargetTypeEnum.company:
         exists = (
             db.query(Application)
@@ -91,6 +94,9 @@ def _validate_company_interaction(
     """
     Companies can only leave feedback for students who applied to one of their jobs.
     """
+    if target_type == TargetTypeEnum.platform:
+        return
+
     if target_type != TargetTypeEnum.student:
         raise HTTPException(
             status_code=400,

@@ -16,6 +16,7 @@ class TargetTypeEnum(str, enum.Enum):
     student = "student"
     interview = "interview"
     job = "job"
+    platform = "platform"
 
 
 class Feedback(Base):
@@ -25,7 +26,7 @@ class Feedback(Base):
     author_type = Column(Enum(AuthorTypeEnum), nullable=False)
     author_id = Column(UUID(as_uuid=True), nullable=False)
     target_type = Column(Enum(TargetTypeEnum), nullable=False)
-    target_id = Column(UUID(as_uuid=True), nullable=False)
+    target_id = Column(UUID(as_uuid=True), nullable=True)
     content = Column(Text, nullable=False)
     rating = Column(Integer, nullable=True)  # 1-5, optional
     flagged = Column(Boolean, default=False, nullable=False)

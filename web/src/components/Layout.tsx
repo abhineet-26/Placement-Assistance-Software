@@ -189,6 +189,9 @@ const Layout = () => {
             <NavLink to="/company/jobs/new" className={navLinkClass} onClick={() => setMobileOpen(false)}>
               <WorkIcon fontSize="small" /> Post Job
             </NavLink>
+            <NavLink to="/company/cvs" className={navLinkClass} onClick={() => setMobileOpen(false)}>
+              <AssignmentIcon fontSize="small" /> Received CVs
+            </NavLink>
             <div className="pt-4 pb-2 px-4 text-xs font-semibold text-white/50 uppercase tracking-wider">Account</div>
             <NavLink to="/company/feedback" className={navLinkClass} onClick={() => setMobileOpen(false)}>
               <FeedbackIcon fontSize="small" /> Submit Feedback

@@ -7,10 +7,10 @@ import uuid
 
 from app.db.session import get_db
 from app.core.auth import get_current_user, require_role
-from app.models.users import User
+from app.models.users import User, RoleEnum
 from app.models.job import JobRequirement, JobStatusEnum
 from app.models.application import Application, ApplicationStatusEnum
-from app.schemas.application import ApplicationCreate, ApplicationRead, ApplicationWithJob
+from app.schemas.application import ApplicationCreate, ApplicationRead, ApplicationWithJob, ApplicationStatusUpdate
 from app.services.matching import run_matching_for_job
 
 router = APIRouter()
@@ -128,3 +128,27 @@ def withdraw_application(
     db.refresh(app_record)
     
     return app_record
+
+@router.patch("/{id}/status", response_model=ApplicationRead)
+def update_application_status(
+    id: uuid.UUID,
+    status_update: ApplicationStatusUpdate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+    _ = Depends(require_role(["company", "admin"]))
+):
+    app_record = db.query(Application).filter(Application.id == id).first()
+    if not app_record:
+        raise HTTPException(status_code=404, detail="Application not found")
+        
+    if user.role == RoleEnum.company:
+        job = app_record.job
+        if not user.company or job.company_id != user.company.id:
+            raise HTTPException(status_code=403, detail="Not authorized to update this application")
+    
+    app_record.status = status_update.status
+    db.commit()
+    db.refresh(app_record)
+    
+    return app_record
+
